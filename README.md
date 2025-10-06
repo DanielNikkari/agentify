@@ -1,9 +1,13 @@
 <!-- HEADER SECTION -->
 <div align="center">
-    <a href="#>
-        <img src="/assets/agentify-logo.svg" alt="Agentify logo" width="500" />
+    <a href="#">
+        <img src="/assets/agentify-logo.svg" alt="Agentify logo" width="500">
     </a>
     <h1>
         Agentify
     </h1>
+    <h3>
+    <a href="/DIARY.md">
+        Project Diary 📚
+    </a>
 </div>
