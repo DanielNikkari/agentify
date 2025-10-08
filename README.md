@@ -11,3 +11,11 @@
         Project Diary 📚
     </a>
 </div>
+
+## Tech Stacks
+
+<div align="center">
+<a href="/docs/tech-stack.svg">
+    <img src="/docs/tech-stack.svg" height="500" >
+</a>
+</div>
