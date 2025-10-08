@@ -1,0 +1,72 @@
+# =======================================
+# .dockerignore for agentify-backend
+# =======================================
+
+# --- Python build / cache files ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+*.log
+
+# --- Virtual environments ---
+.env
+.venv
+env/
+venv/
+
+# --- uv cache directories ---
+.uv/
+.uv_cache/
+uv.lock.bak
+
+# --- OS and editor junk ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# --- Test / build artifacts ---
+dist/
+build/
+*.egg-info/
+.coverage
+htmlcov/
+.mypy_cache/
+pytest_cache/
+.cache/
+
+# --- Docs & temporary files ---
+docs/_build/
+*.tmp
+*.bak
+*.old
+
+# --- Git & CI/CD metadata ---
+.git/
+.gitignore
+.gitattributes
+.github/
+.gitlab-ci.yml
+
+# --- Docker itself ---
+Dockerfile
+docker-compose.yml
+
+# --- Local config / secrets ---
+*.env.local
+*.env.dev
+*.env.test
+*.env.prod
+secrets/
+*.pem
+*.key
+*.crt
+
+# --- Node / frontend stuff (if exists) ---
+node_modules/
+frontend/
+*.tsbuildinfo
