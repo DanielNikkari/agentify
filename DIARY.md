@@ -21,3 +21,5 @@
 <img src="/assets/figma_ui_design.png" alt="Figma UI design for agentify">
 
 `8.10.2025`: Expanded Figma UI views and setup uv package manager for the backend. Further, installed FastAPI standard and created base Dockerfile and .dockerignore files. 🐳
+
+`9.10.2025`: Added API contracts and System Architecture documentations.
