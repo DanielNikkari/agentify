@@ -1,0 +1,24 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agentify-backend-prod
+    env_file:
+      - .env
+    environment:
+      # Environment overrides for production
+      - PYTHONUNBUFFERED=1
+      - UV_NO_SYNC_WARNINGS=1
+      - FIREBASE_CREDENTIALS_PATH=/secrets/firebase-admin-key.json
+    ports:
+      - "8080:8080"
+    volumes:
+      # Mount only secrets if needed (read-only)
+      - ./secrets:/secrets:ro
+    restart: unless-stopped
+    command: >
+      uv run uvicorn app.main:app
+      --host 0.0.0.0
+      --port 8080
+      --reload false

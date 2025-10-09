@@ -26,13 +26,11 @@ RUN uv sync --locked --no-cache
 COPY . .
 
 # SET ENVIRONMENT VARIABLES
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    UV_NO_SYNC_WARNINGS=1 \
+ENV PYTHONDONTWRITEBYTECODE=1 \
     PORT=8080
 
 # EXPOSE PORT 8080
 EXPOSE ${PORT}
 
 # RUN APP
-CMD ["uv", "run", "uvicorn", "agentify_app:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD [ "uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080" ]

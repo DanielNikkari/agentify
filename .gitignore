@@ -108,3 +108,9 @@ static/uploads/
 *.bak
 *.backup
 *.old
+
+# Secrets
+**/secrets/**
+*.key.json
+*.pem
+*.p12

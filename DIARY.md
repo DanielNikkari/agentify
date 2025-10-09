@@ -22,4 +22,4 @@
 
 `8.10.2025`: Expanded Figma UI views and setup uv package manager for the backend. Further, installed FastAPI standard and created base Dockerfile and .dockerignore files. 🐳
 
-`9.10.2025`: Added API contracts and System Architecture documentations. Started the process of setting up the CI-pipelines for both frontend and backend.
+`9.10.2025`: Added API contracts and System Architecture documentations. Started the process of setting up the CI-pipelines for both frontend and backend. Created Firebase/GCP project, enabled Firebase Email, Google, and Github authentications. Created Docker compose file for easier containerization and added basic Firebase token validation flow to the backend.
