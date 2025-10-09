@@ -16,6 +16,6 @@
 
 <div align="center">
 <a href="/docs/tech-stack.svg">
-    <img src="/docs/tech-stack.svg" height="500" >
+    <img src="/docs/diagrams/tech-stack.svg" height="500" >
 </a>
 </div>

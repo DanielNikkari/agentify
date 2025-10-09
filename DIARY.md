@@ -4,7 +4,7 @@
 
 `4.10.2025`: Started the project by creating the high-level system design diagram depicting the resources that I will use/need to implement my system. Moreover, I specified my functional and non-functional goals for the project.
 
-<img src="/docs/agentify-app.png" alt="agentify high level system design">
+<img src="/docs/diagrams/agentify-app.png" alt="agentify high level system design">
 
 `5.10.2025`: I continued by starting to create my design system on Figma, setting up my branding, colours, icons, typography, and components.
 
@@ -14,7 +14,7 @@
 
 <img src="/assets/agentify-project-kanban.png" alt="agentify kanban board">
 
-<img src="/docs/agentify-system-flow-diagrams.png" alt="agentify system flow diagrams">
+<img src="/docs/diagrams/agentify-system-flow-diagrams.png" alt="agentify system flow diagrams">
 
 `7.10.2025`: Added different UI views to figma and how everything works together plus some visualization on core flows.
 
