@@ -1,6 +1,12 @@
-def main():
-    print("Hello from agentify-backend!")
+"""
+Entrypoint for the agentify app.
+"""
+
+from fastapi import FastAPI
+
+app = FastAPI()
 
 
-if __name__ == "__main__":
-    main()
+@app.get("/")
+def root():
+    return {"message": "Hello from agentify-backend!"}

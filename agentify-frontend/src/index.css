@@ -70,23 +70,22 @@ button:focus-visible {
   }
 }
 
-
 .svg-spinners--bouncing-ball {
   width: 5em;
   margin: 0 auto;
-  animation: bounce var(--interval) calc(var(--interval) / -2)
-      cubic-bezier(0, 0, 0, 1) infinite,
+  animation:
+    bounce var(--interval) calc(var(--interval) / -2) cubic-bezier(0, 0, 0, 1) infinite,
     color var(--duration) calc(var(--interval) / -2) linear infinite;
   transform-origin: bottom center;
 }
 
 @keyframes bounce {
-    from,
-    to {
-      transform: translateY(-60%);
-      animation-timing-function: cubic-bezier(0, 0, 1, 0), linear;
-    }
-    50% {
-      transform: none;
-    }
+  from,
+  to {
+    transform: translateY(-60%);
+    animation-timing-function: cubic-bezier(0, 0, 1, 0), linear;
   }
+  50% {
+    transform: none;
+  }
+}

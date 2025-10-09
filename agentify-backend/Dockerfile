@@ -4,7 +4,7 @@
 # Build and run commands:
 #   docker build -t agentify-backend .
 # and
-#   docker run --name agentify-backend-container -t agentify-backend
+#   docker run -p ${PORT}:${PORT} --name agentify-backend-container -t agentify-backend (replace with the actual exposed PORT)
 # ======================================= #
 
 # USE UV DISTRO IMAGE
@@ -28,7 +28,11 @@ COPY . .
 # SET ENVIRONMENT VARIABLES
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    UV_NO_SYNC_WARNINGS=1
+    UV_NO_SYNC_WARNINGS=1 \
+    PORT=8080
+
+# EXPOSE PORT 8080
+EXPOSE ${PORT}
 
 # RUN APP
-CMD [ "uv", "run", "agentify_app.py" ]
+CMD ["uv", "run", "uvicorn", "agentify_app:app", "--host", "0.0.0.0", "--port", "8080"]

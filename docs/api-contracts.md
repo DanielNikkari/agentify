@@ -1,9 +1,11 @@
 # API Contracts — agentify v1.0
+
 Defines the request/response data structures and endpoints for the agentify platform.
 
 _Last updated: 2025-10-09_
 
 ## 📚 Table of Contents
+
 - [Overview](#-overview)
 - [Authentication Endpoints](#-authentication-endpoints)
 - [Agents Endpoints](#-agents-endpoints)
@@ -22,31 +24,36 @@ _Last updated: 2025-10-09_
 https://api.agentify.app/v1
 
 **Auth Method**
+
 - Firebase JWT in `Authorization` header
-- Format:  Bearer
+- Format: Bearer
 
 **Content Type**
 application/json
 
 **Rate Limits**
+
 - Default: 60 requests/minute to non-AI-endpoints and 10 requests/minute to AI-endpoints (handled by API gateway)
 - Limits are configured based on the plan and role
 
 ---
 
 **Responses**
-- `200 OK`: Success  
-- `400 BAD REQUEST`: Missing or invalid parameters  
-- `401 UNAUTHORIZED`: Invalid or expired token  
-- `404 NOT FOUND`: Resource not found  
+
+- `200 OK`: Success
+- `400 BAD REQUEST`: Missing or invalid parameters
+- `401 UNAUTHORIZED`: Invalid or expired token
+- `404 NOT FOUND`: Resource not found
 - `500 INTERNAL SERVER ERROR`: Server failure
 
 ## 🔐 Authentication Endpoints
 
 ### `POST /auth/login`
+
 Authenticate a user using Firebase or third-party provider.
 
 **Request**
+
 ```json
 {
   "provider": "github | google | email",
@@ -56,6 +63,7 @@ Authenticate a user using Firebase or third-party provider.
 ```
 
 **Response**
+
 ```json
 {
   "uid": "string",
@@ -68,9 +76,11 @@ Authenticate a user using Firebase or third-party provider.
 ```
 
 ### `POST /auth/validate`
+
 Validate the JWT for active session.
 
 **Response**
+
 ```json
 {
   "valid": true,
@@ -83,9 +93,11 @@ Validate the JWT for active session.
 ## 👥 Agents Endpoints
 
 ### `GET /agents`
+
 Get a list of all user-created AI agents.
 
 **Response**
+
 ```json
 [
   {
@@ -101,9 +113,11 @@ Get a list of all user-created AI agents.
 ```
 
 ### `POST /agents`
+
 Create a new AI agent.
 
 **Request**
+
 ```json
 {
   "name": "New Agent",
@@ -114,6 +128,7 @@ Create a new AI agent.
 ```
 
 **Response**
+
 ```json
 {
   "id": "agent-uuid",
@@ -122,9 +137,11 @@ Create a new AI agent.
 ```
 
 ### `DELETE /agents/:id`
+
 Remove a user’s agent.
 
 **Response**
+
 ```json
 { "success": true }
 ```
@@ -132,15 +149,18 @@ Remove a user’s agent.
 ## 🧠 RAG / Knowledge Base Endpoints
 
 ### `POST /rag/upload`
+
 Upload documents for embedding and vectorization.
 
 **Request**
+
 ```
 Content-Type: multipart/form-data
 files[] = <documents>
 ```
 
 **Response**
+
 ```json
 {
   "uploaded": 3,
@@ -151,9 +171,11 @@ files[] = <documents>
 ```
 
 ### `GET /rag/pipelines`
+
 List all vector pipelines available to the user.
 
 **Response**
+
 ```json
 [
   {
@@ -168,9 +190,11 @@ List all vector pipelines available to the user.
 ## 💬 Chat Endpoints
 
 ### `POST /chat/query`
+
 Send a chat message to an AI agent.
 
 **Request**
+
 ```json
 {
   "agentId": "agent-uuid",
@@ -181,6 +205,7 @@ Send a chat message to an AI agent.
 ```
 
 **Response**
+
 ```json
 {
   "response": "The report shows a 12% increase in conversions.",
@@ -194,9 +219,11 @@ Send a chat message to an AI agent.
 ## 🔧 MCP / Tools Endpoints
 
 ### `GET /tools`
+
 Fetch available MCP tools connected to system.
 
 **Response**
+
 ```json
 [
   { "id": "calendar", "status": "connected" },
@@ -207,6 +234,7 @@ Fetch available MCP tools connected to system.
 ## 💾 Firestore Schema Reference
 
 **users Collection**
+
 ```json
 {
   "uid": "string",
@@ -219,6 +247,7 @@ Fetch available MCP tools connected to system.
 ```
 
 **agents Collection**
+
 ```json
 {
   "id": "string",
@@ -233,6 +262,7 @@ Fetch available MCP tools connected to system.
 ```
 
 ## ⚙️ Error Format
+
 All errors follow this structure:
 
 ```json
@@ -244,11 +274,13 @@ All errors follow this structure:
 ```
 
 ## 🧑‍💻 Developer Notes
+
 - All timestamps are ISO 8601 strings (`2025-10-09T12:34:56Z`).
 - UUIDs follow v4 format.
 - Multipart uploads are capped at 10MB per file.
 
---- 
-> **Versioning Policy:**  
-> Breaking changes will increment the major version (`/v2`, `/v3`).  
+---
+
+> **Versioning Policy:**
+> Breaking changes will increment the major version (`/v2`, `/v3`).
 > Minor or additive changes will be released under `/v1.x` without altering existing contracts.
