@@ -18,6 +18,7 @@ out/
 # Environment variables
 .env
 .env.local
+.env.development
 .env.development.local
 .env.test.local
 .env.production.local
@@ -108,3 +109,9 @@ static/uploads/
 *.bak
 *.backup
 *.old
+
+# Secrets
+**/secrets/**
+*.key.json
+*.pem
+*.p12
