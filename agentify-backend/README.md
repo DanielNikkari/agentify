@@ -21,4 +21,5 @@ docker compose -f file-name down
 ```
 
 `-f`: Tells the file that docker compose should use
+
 `--build`: Forces a rebuild of the image before running
