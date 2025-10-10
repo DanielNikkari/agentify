@@ -1,3 +1,16 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-accent-coral: #fc6471;
+  --color-accent-green: #4cdc8c;
+  --color-accent-blue: #8dbbff;
+  --color-dark: #333333;
+  --color-dark-gray: #606060;
+  --color-bg-gray: #f4f4f4;
+  --color-bg-white: #ffffff;
+  /* You can also define spacings, radii, fonts, etc. */
+}
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
