@@ -1,55 +1,25 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-accent-coral: #fc6471;
-  --color-accent-green: #4cdc8c;
-  --color-accent-blue: #8dbbff;
-  --color-dark: #333333;
-  --color-dark-gray: #606060;
-  --color-bg-gray: #f4f4f4;
-  --color-bg-white: #ffffff;
-  /* You can also define spacings, radii, fonts, etc. */
+  /* agnetify colours */
+  --color-agentify-accent-coral: #fc6471;
+  --color-agentify-accent-coral-hover: #ff5b69;
+  --color-agentify-accent-green: #4cdc8c;
+  --color-agentify-accent-blue: #8dbbff;
+  --color-agentify-dark: #333333;
+  --color-agentify-dark-gray: #606060;
+  --color-agentify-gray: #f4f4f4;
+  --color-agentify-white: #ffffff;
+
+  /* agentify typography */
+  --font-inter: Inter;
 }
 
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
+.prevent-drag {
+  user-drag: none;
+  -webkit-user-drag: none;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
 }
