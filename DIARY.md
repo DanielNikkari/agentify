@@ -25,3 +25,5 @@
 `9.10.2025`: Added API contracts and System Architecture documentations. Started the process of setting up the CI-pipelines for both frontend and backend. Created Firebase/GCP project, enabled Firebase Email, Google, and Github authentications. Created Docker compose file for easier containerization and added basic Firebase token validation flow to the backend.
 
 `10.10.2025`: Recreated the logo for agentify to better align with the brand. Setting up Tailwind for the frontend.
+
+`11.10.2025`: Improvements for the login page and added terms & conditions for agentify that every user has to agree with. I added components for auth buttons, close button, sliding alert messages, and terms & conditions modal. Moreover, I added registration page for the users that want to sign up using their email.

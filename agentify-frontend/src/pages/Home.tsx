@@ -1,5 +1,6 @@
 import { auth } from '../lib/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
+import AgentifyLoader from '../components/AgentifyLoader';
 
 export default function Home() {
   const [user, loading, error] = useAuthState(auth);
@@ -9,6 +10,7 @@ export default function Home() {
 
   return (
     <div className="p-8">
+      <AgentifyLoader width="w-10" height="h-10" />
       {user ? (
         <div>
           <h1 className="text-2xl font-semibold">
