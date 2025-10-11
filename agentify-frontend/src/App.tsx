@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Login from './pages/Login';
-// import Signup from "./pages/Signup";
+import Register from './pages/Register';
 import Home from './pages/Home';
 import ProtectedRoute from './routes/ProtectedRoute';
 import './App.css';
@@ -12,7 +12,7 @@ export default function App() {
       <Routes>
         {/* Public routes */}
         <Route path="/login" element={<Login />} />
-        {/* <Route path="/signup" element={<Signup />} /> */}
+        <Route path="/register" element={<Register />} />
 
         {/* Protected routes */}
         <Route element={<ProtectedRoute />}>

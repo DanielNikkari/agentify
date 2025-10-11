@@ -1,3 +1,4 @@
+// src/views/Login.tsx
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import agentifyLogo from '../assets/agentify-logo-with-name.svg';
@@ -10,9 +11,11 @@ import {
   GithubAuthProvider,
   signInWithPopup,
   signInWithEmailAndPassword,
+  sendPasswordResetEmail, // <- moved comment off the import list
 } from 'firebase/auth';
 import AuthButton from '../components/AuthButton';
-import TermsAndServices from '../components/TermsAndServices';
+import TermsAndServices from '../components/TermsAndConditions';
+import SlideAlert from '../components/SlideAlert';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -24,17 +27,21 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
+  // alert (slide-down)
+  const [alert, setAlert] = useState<{
+    type: 'error' | 'success' | 'info' | 'warning';
+    message: string;
+  } | null>(null);
 
   // terms and conditions state
   const [showTerms, setShowTerms] = useState(false);
 
   const emailInputRef = useRef<HTMLInputElement | null>(null);
 
-  // focus the email input when entering slide 1 -> 2
+  // focus the email input when entering slide 2
   useEffect(() => {
     if (slide === 1) {
-      // short delay ensures element is in the DOM after the transform tick
       const id = setTimeout(() => emailInputRef.current?.focus(), 150);
       return () => clearTimeout(id);
     }
@@ -49,7 +56,10 @@ export default function Login() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [slide]);
 
-  const goTo = (i: 0 | 1) => setSlide(i);
+  const goTo = (i: 0 | 1) => {
+    setAlert(null);
+    setSlide(i);
+  };
 
   const handleGoogleSignIn = async () => {
     try {
@@ -59,7 +69,7 @@ export default function Login() {
       navigate('/');
     } catch (err: any) {
       console.error('Google Sign-In Error:', err?.message);
-      setError(err?.message ?? 'Google sign-in failed.');
+      setAlert({ type: 'error', message: err?.message ?? 'Google sign-in failed.' });
     } finally {
       setSubmitting(false);
     }
@@ -73,7 +83,7 @@ export default function Login() {
       navigate('/');
     } catch (err: any) {
       console.error('GitHub Sign-In Error:', err?.message);
-      setError(err?.message ?? 'GitHub sign-in failed.');
+      setAlert({ type: 'error', message: err?.message ?? 'GitHub sign-in failed.' });
     } finally {
       setSubmitting(false);
     }
@@ -81,14 +91,39 @@ export default function Login() {
 
   const submitEmail = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    setError(null);
+    setAlert(null);
     try {
       setSubmitting(true);
       await signInWithEmailAndPassword(auth, email.trim(), password);
       navigate('/');
     } catch (err: any) {
       console.error('Email Sign-In Error:', err?.message);
-      setError('Sign-in failed. Invalid email or password.');
+      setAlert({ type: 'error', message: 'Sign-in failed. Invalid email or password.' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // password reset via Firebase
+  const handlePasswordReset = async () => {
+    setAlert(null);
+    const trimmed = email.trim();
+
+    if (!trimmed) {
+      setAlert({ type: 'warning', message: 'Enter your email above, then click “Reset it.”' });
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      await sendPasswordResetEmail(auth, trimmed);
+      setAlert({ type: 'success', message: 'Password reset email sent. Check your inbox.' });
+    } catch (err: any) {
+      console.error('Password Reset Error:', err?.message);
+      setAlert({
+        type: 'error',
+        message: 'Could not send reset email. Check the address and try again.',
+      });
     } finally {
       setSubmitting(false);
     }
@@ -96,6 +131,16 @@ export default function Login() {
 
   return (
     <div className="relative flex flex-col items-center justify-center min-h-screen bg-[#f5f5f5] text-center">
+      {/* Slide-down alert (top of screen) */}
+      {alert && (
+        <SlideAlert
+          type={alert.type}
+          message={alert.message}
+          duration={6000}
+          onClose={() => setAlert(null)}
+        />
+      )}
+
       {/* Logo */}
       <img
         src={agentifyLogo}
@@ -111,18 +156,17 @@ export default function Login() {
 
       {/* Slider viewport */}
       <div className="w-full h-full p-4 max-w-md overflow-hidden">
-        {/* Track (2 slides). We translate the track by 0% or -50%. */}
+        {/* Track (2 slides). We translate the track by 0% or -100%. */}
         <div
           className="
             flex transition-transform ease-out
             transform-gpu will-change-transform motion-reduce:transition-none
           "
-          style={{ transform: `translateX(-${slide * 100}%)` }} // slide = 0 or 1
+          style={{ transform: `translateX(-${slide * 100}%)` }}
         >
           {/* Slide 1: provider buttons */}
           <section className="pr-6 pl-6 min-w-full flex-none px-1">
             <div className="flex flex-col gap-4">
-              {/* GitHub */}
               <AuthButton
                 icon={githubIcon}
                 label="Sign in with GitHub"
@@ -135,7 +179,6 @@ export default function Login() {
                 shadowClass="shadow-sm"
               />
 
-              {/* Google */}
               <AuthButton
                 icon={googleIcon}
                 label="Sign in with Google"
@@ -148,7 +191,8 @@ export default function Login() {
                 shadowClass="shadow-sm"
               />
 
-              {/* Email -> go to slide 2 */}
+              <span className="text-agentify-dark">or</span>
+
               <AuthButton
                 icon={emailIcon}
                 label="Sign in with email"
@@ -164,11 +208,7 @@ export default function Login() {
 
           {/* Slide 2: email form */}
           <section className="pr-6 pl-6 min-w-full flex-none px-1">
-            <form
-              onSubmit={submitEmail}
-              className="flex flex-col gap-4 items-stretch"
-              aria-describedby={error ? 'email-auth-error' : undefined}
-            >
+            <form onSubmit={submitEmail} className="flex flex-col gap-4 items-stretch">
               <input
                 ref={emailInputRef}
                 type="email"
@@ -176,7 +216,9 @@ export default function Login() {
                 autoComplete="email"
                 placeholder="example@email.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                }}
                 className="h-12 w-full rounded-full bg-white text-agentify-dark px-5 text-base shadow-sm outline-none ring-1 ring-black/5 focus:ring-2 focus:ring-agentify-dark"
                 required
               />
@@ -185,16 +227,12 @@ export default function Login() {
                 autoComplete="current-password"
                 placeholder="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                }}
                 className="h-12 w-full rounded-full bg-white text-agentify-dark px-5 text-base shadow-sm outline-none ring-1 ring-black/5 focus:ring-2 focus:ring-agentify-dark"
                 required
               />
-
-              {error && (
-                <div id="email-auth-error" className="text-sm text-red-600 text-left px-2">
-                  {error}
-                </div>
-              )}
 
               <button
                 type="submit"
@@ -203,6 +241,19 @@ export default function Login() {
               >
                 {submitting ? 'Signing in…' : 'sign in'}
               </button>
+
+              {/* Password reset link (under the button) */}
+              <p className="mt-2 text-sm text-gray-600 text-left">
+                Forgot your password?{' '}
+                <button
+                  type="button"
+                  onClick={handlePasswordReset}
+                  disabled={submitting}
+                  className="underline text-agentify-dark-gray hover:text-agentify-dark hover:cursor-pointer disabled:opacity-50"
+                >
+                  Reset it.
+                </button>
+              </p>
             </form>
           </section>
         </div>
@@ -240,17 +291,19 @@ export default function Login() {
           Register here.
         </button>
       </p>
+
       {/* Disclaimer under sign-in buttons */}
       <p className="mt-4 text-xs text-gray-500 max-w-xs text-center">
-        By signing in, you agree to agentify's{' '}
+        By signing in, you agree to agentify&apos;s{' '}
         <button
           onClick={() => setShowTerms(true)}
           className="underline text-agentify-dark-gray hover:text-agentify-dark hover:cursor-pointer"
         >
-          Terms & Conditions
+          Terms &amp; Conditions
         </button>
         .
       </p>
+
       {/* Modal */}
       <TermsAndServices isOpen={showTerms} onClose={() => setShowTerms(false)} />
     </div>
