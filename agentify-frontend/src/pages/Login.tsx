@@ -11,6 +11,8 @@ import {
   signInWithPopup,
   signInWithEmailAndPassword,
 } from 'firebase/auth';
+import AuthButton from '../components/AuthButton';
+import TermsAndServices from '../components/TermsAndServices';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -23,6 +25,9 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // terms and conditions state
+  const [showTerms, setShowTerms] = useState(false);
 
   const emailInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -118,48 +123,42 @@ export default function Login() {
           <section className="pr-6 pl-6 min-w-full flex-none px-1">
             <div className="flex flex-col gap-4">
               {/* GitHub */}
-              <button
+              <AuthButton
+                icon={githubIcon}
+                label="Sign in with GitHub"
                 onClick={handleGithubSignIn}
                 disabled={submitting}
-                className="relative h-12 w-full rounded-full bg-agentify-dark text-white px-4 pl-12 text-base font-medium hover:shadow-lg hover:border border-agentify-white transition disabled:opacity-60"
-              >
-                <img
-                  src={githubIcon}
-                  alt=""
-                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-7 w-7"
-                  aria-hidden
-                />
-                <span className="block text-center leading-none">Sign in with GitHub</span>
-              </button>
+                bgClass="bg-agentify-dark"
+                textClass="text-white"
+                hoverClass="hover:shadow-lg hover:border"
+                borderClass="border-agentify-white"
+                shadowClass="shadow-sm"
+              />
 
               {/* Google */}
-              <button
+              <AuthButton
+                icon={googleIcon}
+                label="Sign in with Google"
                 onClick={handleGoogleSignIn}
                 disabled={submitting}
-                className="relative h-12 w-full rounded-full bg-agentify-white text-agentify-dark px-4 pl-12 text-base font-medium hover:shadow-lg hover:border border-agentify-dark-gray transition shadow-sm disabled:opacity-60"
-              >
-                <img
-                  src={googleIcon}
-                  alt=""
-                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-7 w-7"
-                  aria-hidden
-                />
-                <span className="block text-center leading-none">Sign in with Google</span>
-              </button>
+                bgClass="bg-agentify-white"
+                textClass="text-agentify-dark"
+                hoverClass="hover:shadow-lg hover:border"
+                borderClass="border-agentify-dark-gray"
+                shadowClass="shadow-sm"
+              />
 
               {/* Email -> go to slide 2 */}
-              <button
+              <AuthButton
+                icon={emailIcon}
+                label="Sign in with email"
                 onClick={() => goTo(1)}
-                className="relative h-12 w-full rounded-full bg-white text-agentify-dark px-4 pl-12 text-base font-medium hover:shadow-lg hover:border border-agentify-dark-gray transition shadow-sm"
-              >
-                <img
-                  src={emailIcon}
-                  alt=""
-                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-7 w-7"
-                  aria-hidden
-                />
-                <span className="block text-center leading-none">Sign in with email</span>
-              </button>
+                bgClass="bg-agentify-white"
+                textClass="text-agentify-dark"
+                hoverClass="hover:shadow-lg hover:border"
+                borderClass="border-agentify-dark-gray"
+                shadowClass="shadow-sm"
+              />
             </div>
           </section>
 
@@ -179,6 +178,7 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="h-12 w-full rounded-full bg-white text-agentify-dark px-5 text-base shadow-sm outline-none ring-1 ring-black/5 focus:ring-2 focus:ring-agentify-dark"
+                required
               />
               <input
                 type="password"
@@ -187,6 +187,7 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="h-12 w-full rounded-full bg-white text-agentify-dark px-5 text-base shadow-sm outline-none ring-1 ring-black/5 focus:ring-2 focus:ring-agentify-dark"
+                required
               />
 
               {error && (
@@ -239,14 +240,19 @@ export default function Login() {
           Register here.
         </button>
       </p>
-      <div className="mt-10 flex gap-4 text-xs text-gray-500">
-        <button className="underline text-agentify-dark-gray hover:text-agentify-dark hover:cursor-pointer">
-          Terms of service
+      {/* Disclaimer under sign-in buttons */}
+      <p className="mt-4 text-xs text-gray-500 max-w-xs text-center">
+        By signing in, you agree to agentify's{' '}
+        <button
+          onClick={() => setShowTerms(true)}
+          className="underline text-agentify-dark-gray hover:text-agentify-dark hover:cursor-pointer"
+        >
+          Terms & Conditions
         </button>
-        <button className="underline text-agentify-dark-gray hover:text-agentify-dark hover:cursor-pointer">
-          Contact
-        </button>
-      </div>
+        .
+      </p>
+      {/* Modal */}
+      <TermsAndServices isOpen={showTerms} onClose={() => setShowTerms(false)} />
     </div>
   );
 }

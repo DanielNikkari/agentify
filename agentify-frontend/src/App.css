@@ -10,6 +10,8 @@
   --color-agentify-dark-gray: #606060;
   --color-agentify-gray: #f4f4f4;
   --color-agentify-white: #ffffff;
+  --color-agentify-red: #ff4450;
+  --color-agentify-red-light: #ff707a;
 
   /* agentify typography */
   --font-inter: Inter;
