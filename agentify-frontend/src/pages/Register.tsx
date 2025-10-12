@@ -7,8 +7,6 @@ import { createUserWithEmailAndPassword, AuthError } from 'firebase/auth';
 import TermsAndServices from '../components/TermsAndConditions';
 import SlideAlert from '../components/SlideAlert';
 
-// …imports stay the same
-
 export default function Register() {
   const navigate = useNavigate();
 
@@ -94,7 +92,7 @@ export default function Register() {
      ${error ? 'ring-2 ring-red-500 focus:ring-red-600' : 'ring-1 ring-black/5 focus:ring-2 focus:ring-agentify-dark'}`;
 
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-screen bg-[#f5f5f5] text-center">
+    <div className="relative flex flex-col items-center justify-center min-h-screen bg-agentify-bg-gray text-center">
       {alert && (
         <SlideAlert
           type={alert.type}

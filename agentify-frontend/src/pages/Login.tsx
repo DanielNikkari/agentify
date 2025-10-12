@@ -14,7 +14,7 @@ import {
   sendPasswordResetEmail, // <- moved comment off the import list
 } from 'firebase/auth';
 import AuthButton from '../components/AuthButton';
-import TermsAndServices from '../components/TermsAndConditions';
+import TermsAndConditions from '../components/TermsAndConditions';
 import SlideAlert from '../components/SlideAlert';
 
 export default function Login() {
@@ -130,7 +130,7 @@ export default function Login() {
   };
 
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-screen bg-[#f5f5f5] text-center">
+    <div className="relative flex flex-col items-center justify-center min-h-screen bg-agentify-bg-gray text-center">
       {/* Slide-down alert (top of screen) */}
       {alert && (
         <SlideAlert
@@ -305,7 +305,7 @@ export default function Login() {
       </p>
 
       {/* Modal */}
-      <TermsAndServices isOpen={showTerms} onClose={() => setShowTerms(false)} />
+      <TermsAndConditions isOpen={showTerms} onClose={() => setShowTerms(false)} />
     </div>
   );
 }
