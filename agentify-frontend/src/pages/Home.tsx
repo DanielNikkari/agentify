@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../lib/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
+import AgentCards, { DEMO_AGENTS } from '../components/AgentCards';
 import AgentifyLoader from '../components/AgentifyLoader';
 import '../components/AgentifyLoader.css';
 import emptyBox from '../assets/illustrations/missing.png';
@@ -13,6 +14,9 @@ import TermsAndConditions from '../components/TermsAndConditions';
 export default function Home() {
   const [user, loading, error] = useAuthState(auth);
   const navigate = useNavigate();
+
+  // Agents state
+  const [agents, setAgents] = useState<AgentCards[]>([{ id: 'a1', name: 'Test', model: 'GPT 5' }]);
 
   // Hide or show the left panel (expanded when true)
   const [showSidebar, setShowSidebar] = useState(true);
@@ -53,10 +57,10 @@ export default function Home() {
 
   // Main Home view
   return (
-    <div className="flex min-h-screen bg-agentify-bg-gray">
+    <div className="flex h-screen bg-agentify-bg-gray overflow-hidden">
       {/* Sidebar */}
       <aside
-        className={`relative bg-white border-r border-gray-200 flex flex-col justify-between
+        className={`relative bg-white border-r border-gray-200 flex flex-col justify-between h-full flex-shrink-0 overflow-y-auto
         ${showSidebar ? 'w-60' : 'w-20'}
         transition-all duration-300 ease-in-out`}
       >
@@ -243,18 +247,28 @@ export default function Home() {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 flex flex-col items-center justify-center text-center">
-        <img src={emptyBox} alt="Empty box illustration" className="w-40 h-40 mb-6" />
-        <h2 className="text-2xl font-semibold text-agentify-dark mb-2">
-          Oopsie... you have no agents,
-        </h2>
-        <h2 className="text-2xl font-semibold text-agentify-dark mb-6">but we can create one!</h2>
-        <button
-          onClick={() => navigate('/create-agent')}
-          className="px-8 py-3 rounded-full bg-agentify-accent-coral text-white font-medium hover:shadow-lg transition"
-        >
-          create your first agent
-        </button>
+      <main className="flex-1 overflow-y-auto">
+        {agents.length === 0 ? (
+          <div className="flex min-h-full flex-col items-center justify-center p-6 text-center">
+            <img src={emptyBox} alt="Empty box illustration" className="w-40 h-40 mb-6" />
+            <h2 className="text-2xl font-semibold text-agentify-dark mb-2">
+              Oopsie... you have no agents,
+            </h2>
+            <h2 className="text-2xl font-semibold text-agentify-dark mb-6">
+              but we can create one!
+            </h2>
+            <button
+              onClick={() => navigate('/create-agent')}
+              className="px-8 py-3 rounded-full bg-agentify-accent-coral text-white font-medium hover:shadow-lg transition hover:bg-agentify-accent-coral-hover"
+            >
+              create your first agent
+            </button>
+          </div>
+        ) : (
+          <div className="flex min-h-full flex-col items-center justify-start gap-6 p-6 text-center">
+            <AgentCards agents={DEMO_AGENTS} />
+          </div>
+        )}
       </main>
 
       {/* Modal */}
