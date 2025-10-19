@@ -30,4 +30,4 @@
 
 `18.10.2025`: Added Agent Cards for reprsenting each Agent that the user has created.
 
-`19.10.2025`: Added endpoints for creating an agent, getting an agent, and getting all agents for the authenticated user.
+`19.10.2025`: Added endpoints for creating an agent, getting an agent, and getting all agents for the authenticated user. Added frontend API services to handle agents operations.
