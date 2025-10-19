@@ -40,5 +40,6 @@ Content-Type: application/json
 {
   "name": "Sample Agent",
   "model": "gemini-2.5-flash",
-  "description": "Agent created via REST client test"
+  "description": "Agent created via REST client test",
+  "role": "Test sample"
 }

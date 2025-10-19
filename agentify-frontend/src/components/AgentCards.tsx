@@ -5,37 +5,19 @@ import CardIDCardIcon from '../assets/icons/card-id-card-icon.svg';
 import CardKnowledgebaseIcon from '../assets/icons/card-knowledge-base-icon.svg';
 import CardToolsIcon from '../assets/icons/card-tools-icon.svg';
 
-import AgentIcon1 from '../assets/agent-icons/agent-icon-1.svg';
-import AgentIcon2 from '../assets/agent-icons/agent-icon-2.svg';
-import AgentIcon3 from '../assets/agent-icons/agent-icon-3.svg';
-import AgentIcon4 from '../assets/agent-icons/agent-icon-4.svg';
-import AgentIcon5 from '../assets/agent-icons/agent-icon-5.svg';
-import AgentIcon6 from '../assets/agent-icons/agent-icon-6.svg';
-import AgentIcon7 from '../assets/agent-icons/agent-icon-7.svg';
-import AgentIcon8 from '../assets/agent-icons/agent-icon-8.svg';
-import AgentIcon9 from '../assets/agent-icons/agent-icon-9.svg';
-import AgentIcon10 from '../assets/agent-icons/agent-icon-10.svg';
-import AgentIcon11 from '../assets/agent-icons/agent-icon-11.svg';
-import AgentIcon12 from '../assets/agent-icons/agent-icon-12.svg';
-import AgentIcon13 from '../assets/agent-icons/agent-icon-13.svg';
-import AgentIcon14 from '../assets/agent-icons/agent-icon-14.svg';
-import AgentIcon15 from '../assets/agent-icons/agent-icon-15.svg';
-import AgentIcon16 from '../assets/agent-icons/agent-icon-16.svg';
-import AgentIcon17 from '../assets/agent-icons/agent-icon-17.svg';
-import AgentIcon18 from '../assets/agent-icons/agent-icon-18.svg';
-import AgentIcon19 from '../assets/agent-icons/agent-icon-19.svg';
-import AgentIcon20 from '../assets/agent-icons/agent-icon-20.svg';
-
 export type AgentStatus = 'active' | 'idle' | 'error';
 export type AgentAccent = 'coral' | 'green' | 'blue';
 
 export type Agent = {
-  id: string;
+  uuid: string;
   name: string;
   model: string; // e.g. "GPT 5", "Gemini 2.5 Flash", "Sonnet 4.5"
+  avatar: string;
+  role?: string;
   status?: AgentStatus;
   accent?: AgentAccent; // avatar halo color
-  avatarSrc?: string; // optional image url
+  knowledge_base?: string;
+  tools?: string;
 };
 
 const statusColor: Record<AgentStatus, string> = {
@@ -49,29 +31,6 @@ const accentBg: Record<AgentAccent, string> = {
   green: 'var(--color-agentify-accent-green)',
   blue: 'var(--color-agentify-accent-blue)',
 };
-
-const fallbackAvatars = [
-  AgentIcon1,
-  AgentIcon2,
-  AgentIcon3,
-  AgentIcon4,
-  AgentIcon5,
-  AgentIcon6,
-  AgentIcon7,
-  AgentIcon8,
-  AgentIcon9,
-  AgentIcon10,
-  AgentIcon11,
-  AgentIcon12,
-  AgentIcon13,
-  AgentIcon14,
-  AgentIcon15,
-  AgentIcon16,
-  AgentIcon17,
-  AgentIcon18,
-  AgentIcon19,
-  AgentIcon20,
-];
 
 // Small row used inside the card
 function DetailRow({ icon, label }: { icon: React.ReactNode; label: string }) {
@@ -89,17 +48,26 @@ function DetailRow({ icon, label }: { icon: React.ReactNode; label: string }) {
 }
 
 export function AgentCard({ agent }: { agent: Agent }) {
-  const { name, model, status, accent = 'blue', avatarSrc } = agent;
-  const resolvedStatus = (status || 'active') as AgentStatus;
+  const { uuid, name, role, model, status, accent = 'blue', avatar, knowledge_base, tools } = agent;
+  const resolvedStatus = (status || 'idle') as AgentStatus;
   const statusLabel = `${resolvedStatus.charAt(0).toUpperCase()}${resolvedStatus.slice(1)}`;
-  const fallbackAvatar = useMemo(
-    () => fallbackAvatars[Math.floor(Math.random() * fallbackAvatars.length)],
-    []
-  );
+
+  const getAvatarUrl = (avatar: string | number) => {
+    // Case 1: avatar is a number → load from local default icons
+    if (!isNaN(Number(avatar))) {
+      const index = Number(avatar);
+      return `/public/agent-icons/agent-icon-${index}.svg`; // OR your own array/map instead
+    }
+
+    // Case 2: avatar is a real URL (string that’s NOT a number)
+    return avatar;
+  };
+
+  const agentAvatar = getAvatarUrl(avatar);
 
   return (
     <div
-      className="relative w-[290px] rounded-2xl border border-black/5 bg-[var(--color-agentify-white)] p-6 shadow-md shadow-black/10 transition-shadow hover:shadow-lg hover:cursor-pointer"
+      className="relative w-[290px] rounded-2xl border border-black/5 bg-[var(--color-agentify-white)] p-6 shadow-md shadow-black/10 transition-shadow hover:shadow-lg hover:cursor-pointer overflow-hidden"
       role="group"
     >
       {/* status dot + tooltip */}
@@ -122,7 +90,7 @@ export function AgentCard({ agent }: { agent: Agent }) {
           style={{ backgroundColor: accentBg[accent] }}
         >
           <img
-            src={avatarSrc || fallbackAvatar}
+            src={agentAvatar}
             alt={name}
             className="h-22 w-22 rounded-full object-cover"
             draggable={false}
@@ -139,13 +107,16 @@ export function AgentCard({ agent }: { agent: Agent }) {
         <DetailRow icon={<img src={CardBrainIcon} className="h-5 w-5" />} label={model} />
         <DetailRow
           icon={<img src={CardIDCardIcon} className="h-5 w-5" />}
-          label="knowledge base name"
+          label={role ? role : 'No role added'}
         />
         <DetailRow
           icon={<img src={CardKnowledgebaseIcon} className="h-5 w-5" />}
-          label="tools list"
+          label={knowledge_base ? knowledge_base : 'No knowledge base added'}
         />
-        <DetailRow icon={<img src={CardToolsIcon} className="h-5 w-5" />} label="agent role" />
+        <DetailRow
+          icon={<img src={CardToolsIcon} className="h-5 w-5" />}
+          label={tools ? tools : 'No tools set'}
+        />
       </div>
     </div>
   );
@@ -156,103 +127,8 @@ export default function AgentCards({ agents }: { agents: Agent[] }) {
   return (
     <div className="flex flex-wrap gap-6">
       {agents.map((a) => (
-        <AgentCard key={a.id} agent={a} />
+        <AgentCard key={a.uuid} agent={a} />
       ))}
     </div>
   );
 }
-
-// Example data for quick drop-in
-export const DEMO_AGENTS: Agent[] = [
-  {
-    id: 'a1',
-    name: 'Berte Fahrenwald',
-    model: 'Gemini 2.5 Flash',
-    status: 'active',
-    accent: 'blue',
-  },
-  {
-    id: 'a2',
-    name: 'Ivie Murakami',
-    model: 'GPT 5',
-    status: 'idle',
-    accent: 'blue',
-  },
-  {
-    id: 'a3',
-    name: 'Fidela Lochridge',
-    model: 'Sonnet 4.5',
-    status: 'error',
-    accent: 'blue',
-  },
-  {
-    id: 'a4',
-    name: 'Fidela Lochridge',
-    model: 'Sonnet 4.5',
-    status: 'error',
-    accent: 'blue',
-  },
-  {
-    id: 'a5',
-    name: 'Fidela Lochridge',
-    model: 'Sonnet 4.5',
-    status: 'error',
-    accent: 'blue',
-  },
-  {
-    id: 'a6',
-    name: 'Fidela Lochridge',
-    model: 'Sonnet 4.5',
-    status: 'error',
-    accent: 'blue',
-  },
-  {
-    id: 'a7',
-    name: 'Fidela Lochridge',
-    model: 'Sonnet 4.5',
-    status: 'error',
-    accent: 'blue',
-  },
-  {
-    id: 'a8',
-    name: 'Fidela Lochridge',
-    model: 'Sonnet 4.5',
-    status: 'error',
-    accent: 'blue',
-  },
-  {
-    id: 'a9',
-    name: 'Fidela Lochridge',
-    model: 'Sonnet 4.5',
-    status: 'error',
-    accent: 'blue',
-  },
-  {
-    id: 'a10',
-    name: 'Fidela Lochridge',
-    model: 'Sonnet 4.5',
-    status: 'error',
-    accent: 'blue',
-  },
-  {
-    id: 'a11',
-    name: 'Fidela Lochridge',
-    model: 'Sonnet 4.5',
-    status: 'error',
-    accent: 'blue',
-  },
-];
-
-/*
-Usage:
-
-import AgentCards, { DEMO_AGENTS } from "./AgentCards";
-
-export default function Page() {
-  return (
-    <main className="min-h-screen bg-[var(--color-agentify-bg-gray)] p-8 font-[var(--font-inter)]">
-      <AgentCards agents={DEMO_AGENTS} />
-    </main>
-  );
-}
-*/

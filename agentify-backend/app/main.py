@@ -5,6 +5,7 @@ Entrypoint for the agentify app.
 import logging
 
 from fastapi import Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.firebase_admin import init_firebase
 from app.core.firestore import init_firestore
@@ -45,6 +46,17 @@ def create_app() -> FastAPI:
     # Register routers
     app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
     app.include_router(agents.router, prefix="/agents", tags=["Agents Service"])
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            "https://your-frontend.com",
+            "http://localhost:5173",
+        ],  # fill the frontend production uri later
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     return app
 

@@ -10,10 +10,13 @@ from pydantic import BaseModel
 class AgentCreate(BaseModel):
     name: str
     model: str
-    icon: str | None = None
+    role: str | None = None
+    avatar: str | None = None
     description: str | None = None
     # TODO: knowledge_base: add setting knowledge base(s)
+    knowledge_base: None = None
     # TODO: tools: add setting tool(s)
+    tools: None = None
 
 
 class Agent(AgentCreate):

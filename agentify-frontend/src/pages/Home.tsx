@@ -1,22 +1,34 @@
 // src/views/Home.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../lib/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import AgentCards, { DEMO_AGENTS } from '../components/AgentCards';
+import AgentCards from '../components/AgentCards';
 import AgentifyLoader from '../components/AgentifyLoader';
 import '../components/AgentifyLoader.css';
 import emptyBox from '../assets/illustrations/missing.png';
 import agentifyLogoWithName from '../assets/agentify-logo-with-name.svg';
 import agentifyLogo from '../assets/agentify-logo.svg';
 import TermsAndConditions from '../components/TermsAndConditions';
+import { getAgents } from '../api/agents';
 
 export default function Home() {
   const [user, loading, error] = useAuthState(auth);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (!user) return;
+
+    const loadAgents = async () => {
+      const agents = await getAgents();
+      setAgents(agents);
+    };
+
+    loadAgents();
+  }, [user]);
+
   // Agents state
-  const [agents, setAgents] = useState<AgentCards[]>([{ id: 'a1', name: 'Test', model: 'GPT 5' }]);
+  const [agents, setAgents] = useState<AgentCards[]>([]);
 
   // Hide or show the left panel (expanded when true)
   const [showSidebar, setShowSidebar] = useState(true);
@@ -69,7 +81,7 @@ export default function Home() {
           <div
             className={`p-3 flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} space-x-2`}
           >
-            {/* Hide logo entirely when collapsed */}
+            {/* Use logo without the name when collapsed */}
             {!isCollapsed ? (
               <img
                 src={agentifyLogoWithName}
@@ -265,8 +277,8 @@ export default function Home() {
             </button>
           </div>
         ) : (
-          <div className="flex min-h-full flex-col items-center justify-start gap-6 p-6 text-center">
-            <AgentCards agents={DEMO_AGENTS} />
+          <div className="min-h-screen bg-[var(--color-agentify-bg-gray)] p-8 font-[var(--font-inter)]">
+            <AgentCards agents={agents} />
           </div>
         )}
       </main>

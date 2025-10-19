@@ -3,6 +3,7 @@ Handle agents service.
 """
 
 import logging
+import random
 from uuid import uuid4
 
 from fastapi import HTTPException
@@ -64,6 +65,11 @@ async def create_agent(user_id: str, data: AgentCreate) -> Agent:
 
     agent_id = uuid4().hex  # always backend-generated
     agent_data = data.model_dump()
+
+    # If avatar url not set, set randomly one of the default avatars
+    if not agent_data["avatar"]:
+        rand_num = random.randint(0, 19)
+        agent_data["avatar"] = str(rand_num)
 
     await (
         db.collection("users")
