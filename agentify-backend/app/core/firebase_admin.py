@@ -35,7 +35,7 @@ def init_firebase():
     # Priority 2: Local .env file path
     elif os.getenv("FIREBASE_CREDENTIALS_PATH"):
         path = os.getenv("FIREBASE_CREDENTIALS_PATH")
-        logger.info("PATH:", path)
+        logger.info(f"PATH: {path}")
         if not os.path.exists(path):
             raise FileNotFoundError(f"Firebase credentials file not found at {path}")
         cred = credentials.Certificate(path)

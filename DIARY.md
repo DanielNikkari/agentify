@@ -29,3 +29,5 @@
 `11.10.2025`: Improvements for the login page and added terms & conditions for agentify that every user has to agree with. I added components for auth buttons, close button, sliding alert messages, and terms & conditions modal. Moreover, I added registration page for the users that want to sign up using their email.
 
 `18.10.2025`: Added Agent Cards for reprsenting each Agent that the user has created.
+
+`19.10.2025`: Added endpoints for creating an agent, getting an agent, and getting all agents for the authenticated user.
