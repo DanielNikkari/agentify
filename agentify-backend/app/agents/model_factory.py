@@ -1,13 +1,12 @@
 """
-Handle LLM model setup.
+Handle LLM model setup and registry.
 """
 
 import os
 from typing import Callable
 
 import dotenv
-from agno import models
-from agno.models.google import Gemini
+from langchain_google_vertexai import ChatVertexAI
 
 dotenv.load_dotenv()
 
@@ -21,17 +20,16 @@ def require_env(var: str):
 MODEL_REGISTRY: dict[str, Callable[..., object]] = {
     "gemini-2.5-flash": lambda temperature, thinking: (
         require_env("GOOGLE_APPLICATION_CREDENTIALS"),
-        Gemini(
-            id="gemini-2.5-flash",
+        ChatVertexAI(
+            model="gemini-2.5-flash",
             temperature=temperature,
-            vertexai=True,
             thinking_budget=-1 if thinking else False,
         ),
     )[-1]
 }
 
 
-def get_model(model_name: str, temperature: float, thinking: bool = False) -> models:
+def get_model(model_name: str, temperature: float, thinking: bool = False):
     """
     Get GenAI model.
     Args:
@@ -39,7 +37,7 @@ def get_model(model_name: str, temperature: float, thinking: bool = False) -> mo
         temperature(float): temperature of the model (0.0-2.0).
         thinking(bool): true for giving model thinking budget, otherwise false.
     Returns:
-        models: Agno model instance.
+        model: created AI model object instance.
     """
     if model_name not in MODEL_REGISTRY:
         raise ValueError(
@@ -48,3 +46,12 @@ def get_model(model_name: str, temperature: float, thinking: bool = False) -> mo
     if not (0.0 <= temperature <= 2.0):
         raise ValueError(f"Temperature value {temperature} not in range 0.0-2.0.")
     return MODEL_REGISTRY[model_name](temperature, thinking)
+
+
+def get_available_models() -> list[str]:
+    """
+    Return list of available models.
+    Returns:
+        list[str]: List of models in model registry (available models)
+    """
+    return MODEL_REGISTRY.keys()

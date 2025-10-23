@@ -13,6 +13,7 @@ class AgentCreate(BaseModel):
     role: str | None = None
     avatar: str | None = None
     description: str | None = None
+    system_message: str | None = None
     # TODO: knowledge_base: add setting knowledge base(s)
     knowledge_base: None = None
     # TODO: tools: add setting tool(s)

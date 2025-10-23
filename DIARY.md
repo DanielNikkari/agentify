@@ -33,3 +33,5 @@
 `19.10.2025`: Added endpoints for creating an agent, getting an agent, and getting all agents for the authenticated user. Added frontend API services to handle agents operations.
 
 `20.10.2025`: Implemented Agent model factory.
+
+`23.10.2025`: Swapped Agno for LangChain, implemented base for working on Agent classes and improved unittesting.
