@@ -5,6 +5,8 @@ Base class for LLM Agents.
 from abc import ABC, abstractmethod
 from typing import Generator
 
+from langchain.messages import AIMessage, HumanMessage
+
 
 class Agentify(ABC):
     """Interface for all LLM agents."""
@@ -44,9 +46,9 @@ class Agentify(ABC):
         pass
 
     @abstractmethod
-    def run(self, inputs: dict) -> str:
+    def run(self, inputs: list[HumanMessage | AIMessage]) -> str:
         pass
 
     @abstractmethod
-    def arun(self, inputs: dict) -> Generator:
+    def arun(self, inputs: list[HumanMessage | AIMessage]) -> Generator:
         pass

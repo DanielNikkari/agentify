@@ -10,11 +10,11 @@ def vertexai_model():
 
 
 @pytest.fixture(scope="session")
-def agent(vertexai_model):
+def agent():
     return Agent(
         id="test_id",
         name="Test Agent",
-        model=vertexai_model,
+        model="gemini-2.5-flash",
         status="idle",
         description="Agent for unittesting.",
         system_message="You are a test agent",

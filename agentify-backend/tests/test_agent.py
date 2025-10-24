@@ -1,7 +1,7 @@
 import pytest
+from langchain.messages import AIMessage, HumanMessage
 
 from app.agents.agent import Agent
-from tests.conftest import vertexai_model
 
 
 @pytest.mark.parametrize(
@@ -10,7 +10,7 @@ from tests.conftest import vertexai_model
         (
             "test_id",
             "Test Agent",
-            vertexai_model,
+            "gemini-2.5-flash",
             "idle",
             "Agent for unittesting.",
             "You are a test agent",
@@ -35,8 +35,13 @@ def test_agent(
     isinstance(agent, Agent)
 
 
+def test_run(agent):
+    response = agent.run([HumanMessage("Write me a haiku about spring.")])
+    isinstance(response, list)
+    isinstance(all(response), HumanMessage | AIMessage)
+
+
 def test_arun(agent):
-    for event in agent.arun(
-        {"messages": [{"role": "user", "content": "Tell me a fun fact fom history."}]}
-    ):
-        print(f"EVENT: {event}")
+    for event in agent.arun([HumanMessage("Tell me a fun fact fom history.")]):
+        pass
+    isinstance(event[0], AIMessage)
