@@ -1,35 +1,59 @@
 """
-Agent instance
+LangGraph Agent instance.
 """
 
 import logging
-from typing import Any, Generator
+from dataclasses import field
+from typing import Any, Generator, TypedDict
 
 from langchain.agents import create_agent
 from langchain.messages import AIMessage, HumanMessage
+from langchain_core.runnables import RunnableConfig
 from langgraph.graph.state import StateGraph
+from pydantic.dataclasses import dataclass
 
 from app.agents.base import Agentify
+from app.agents.exceptions import AgentInvokationError, HistoryFetchingError
 from app.agents.model_factory import get_model
 
 logger = logging.getLogger(__name__)
 
 
-class AgentInvokationError(Exception):
-    """Raised when there is an error invoking the agent."""
+class Context(TypedDict):
+    """
+    Context parameters for the agent.
+    """
+
+    agent_name: str
+    agent_role: str | None
+    agent_description: str | None
+    agent_language: str | None
+    user_name: str | None
+
+
+@dataclass
+class State:
+    """
+    Input state for the agent.
+    Defines the initial structure for A2A conversational messages.
+    """
+
+    messages: list[HumanMessage | AIMessage] = field(default_factory=list)
 
 
 class Agent(Agentify):
     """
-    LLM Agent instance.
+    LangGraph agent with conversation history, state store, and context.
     """
 
     def __init__(
         self,
         id: str,
+        owner_id: str,
         name: str,
         model: str,
         status: str,
+        role: str | None = None,
         description: str | None = None,
         system_message: str | None = None,
         temperature: float | None = None,
@@ -38,23 +62,46 @@ class Agent(Agentify):
         tools: Any = None,
     ):
         self._id = id
+        self._owner_id = owner_id
         self._name = name
         self._model = get_model(
             model_name=model, temperature=temperature or 1.0, thinking=thinking
         )
         self._status = status
+        self._role = role
         self._description = description
         self._system_message = system_message
         self.knowledge_base = knowledge_base
         self.tools = tools
 
-        self.graph = self._init_graph()
+        try:
+            self._conversation_history = self._get_conversation_history()
+        except HistoryFetchingError:
+            self._conversation_history = []
 
-        logger.info(f"Initiated agent instance: id={self._id}, name={self._name}")
+        self._graph = create_agent(
+            model=self.model,
+            tools=self.tools,
+            system_prompt=self.system_message,
+            store=self.knowledge_base,
+            state_schema=State,
+            context_schema=Context(
+                agent_name=self._name,
+                agent_role=self._role,
+                agent_description=self._description,
+            ),
+        )
+        logger.info(
+            f"Initiated agent instance: id={self._id}, name={self._name}, role={self._role}, model={model}"
+        )
 
     @property
     def id(self) -> str:
         return self._id
+
+    @property
+    def owner_id(self) -> str:
+        return self._owner_id
 
     @property
     def name(self) -> str:
@@ -76,41 +123,67 @@ class Agent(Agentify):
     def model(self) -> str:
         return self._model
 
-    def _init_graph(self) -> StateGraph:
-        """Create LangChain graph instance (StateGraph)"""
-        return create_agent(
-            model=self.model,
-            tools=self.tools,
-            system_prompt=self.system_message,
-            store=self.knowledge_base,
-        )
+    @property
+    def history(self) -> list[HumanMessage | AIMessage]:
+        return self._conversation_history
 
-    def run(
-        self, inputs: list[HumanMessage | AIMessage], conversation_id: str | None = None
-    ) -> list[HumanMessage | AIMessage]:
+    @property
+    def graph(self) -> StateGraph:
+        return self._graph
+
+    def _get_conversation_history(self):
+        """Get agent conversation history."""
+        try:
+            return super()._get_conversation_history()
+        except Exception:
+            logger.error(
+                f"Failed to get agent history from Firestore. (agent_id={self._id})",
+                exc_info=True,
+            )
+            raise HistoryFetchingError(
+                "Failed to get agent history from Firestore"
+            ) from None
+
+    def _update_history(self, message: HumanMessage | AIMessage) -> None:
+        """Update conversation history."""
+        self._conversation_history = self._conversation_history + [message]
+        # TODO: Implement Firestore integration to store the conversation on Firestore (run storing async on background)
+
+    def run(self, input: str, conversation_id: str) -> list[HumanMessage | AIMessage]:
         """Invoke agent synchronously."""
         try:
-            inputs = {"messages": inputs}
-            response = self.graph.invoke(inputs)
+            config: RunnableConfig = {"configurable": {"thread_id": conversation_id}}
+            self._update_history(HumanMessage(input))
+            messages = {"messages": self._conversation_history}
+            response = self._graph.invoke(messages, config=config)
             # TODO: request and token tracking
-            return response.get("messages")
+            self._update_history(response.get("messages")[-1])
+            return response.get("messages")[-1]
         except Exception:
             logger.error(
-                f"Error invoking the agent {self._name} ({self._id})", exc_info=True
+                f"Error invoking the agent {self._name} (agent_id={self._id})",
+                exc_info=True,
             )
-            raise AgentInvokationError(f"Error invoking agent {self._name}")
+            raise AgentInvokationError(
+                f"Error invoking agent {self._name} (agent_id={self._id})"
+            ) from None
 
-    def arun(
-        self, inputs: list[HumanMessage | AIMessage], conversation_id: str | None = None
-    ) -> Generator:
+    def arun(self, input: str, conversation_id: str) -> Generator:
         """Invoke agent asynchronously."""
         try:
+            config: RunnableConfig = {"configurable": {"thread_id": conversation_id}}
+            self._update_history(HumanMessage(input))
+            messages = {"messages": self._conversation_history}
             # TODO: request and token tracking
-            inputs = {"messages": inputs}
-            for chunk in self.graph.stream(inputs, stream_mode="updates"):
-                yield (chunk.get("model").get("messages"))
+            for chunk in self._graph.stream(
+                messages, stream_mode="updates", config=config
+            ):
+                self._update_history([chunk.get("model").get("messages")[-1]])
+                yield (chunk.get("model").get("messages")[-1])
         except Exception:
             logger.error(
                 f"Error invoking the agent {self._name} ({self._id})", exc_info=True
             )
-            raise AgentInvokationError(f"Error invoking agent {self._name}")
+            raise AgentInvokationError(
+                f"Error invoking agent {self._name} (agent_id={self._id})"
+            ) from None

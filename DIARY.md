@@ -35,3 +35,5 @@
 `20.10.2025`: Implemented Agent model factory.
 
 `23.10.2025`: Swapped Agno for LangChain, implemented base for working on Agent classes and improved unittesting.
+
+`25.10.2025`: Continued developing base for Agent classes and added short-term memory (conversation history).

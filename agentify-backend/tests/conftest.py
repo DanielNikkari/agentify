@@ -13,11 +13,14 @@ def vertexai_model():
 def agent():
     return Agent(
         id="test_id",
+        owner_id="test_owner_id",
         name="Test Agent",
         model="gemini-2.5-flash",
         status="idle",
+        role="test role",
         description="Agent for unittesting.",
         system_message="You are a test agent",
+        temperature=0.5,
         knowledge_base=None,
         tools=None,
     )
