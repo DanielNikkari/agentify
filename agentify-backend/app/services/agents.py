@@ -4,8 +4,10 @@ Handle agents service.
 
 import logging
 import random
+from datetime import datetime
 from uuid import uuid4
 
+import google.cloud.firestore as fs
 from fastapi import HTTPException
 
 from app.core.firestore import init_firestore
@@ -67,16 +69,30 @@ async def create_agent(user_id: str, data: AgentCreate) -> Agent:
     agent_data = data.model_dump()
 
     # If avatar url not set, set randomly one of the default avatars
-    if not agent_data["avatar"]:
+    if not agent_data.get("avatar"):
         rand_num = random.randint(0, 19)
         agent_data["avatar"] = str(rand_num)
 
-    await (
-        db.collection("users")
-        .document(user_id)
-        .collection("agents")
-        .document(agent_id)
-        .set(agent_data)
+    agent_data["created_at"] = fs.SERVER_TIMESTAMP
+    history = agent_data.pop(
+        "history", []
+    )  # Pop history as it will be inserted into its own collection
+
+    agent_ref = (
+        db.collection("users").document(user_id).collection("agents").document(agent_id)
     )
 
-    return Agent(uuid=agent_id, **agent_data)
+    await agent_ref.set(agent_data, merge=False)
+
+    for item in history:
+        await agent_ref.collection("history").add(
+            {
+                "role": item["role"],
+                "content": item["content"],
+                "timestamp": fs.SERVER_TIMESTAMP,
+            }
+        )
+
+    agent_data.pop("created_at")
+    agent_data["history"] = history
+    return Agent(uuid=agent_id, created_at=datetime.utcnow(), **agent_data)

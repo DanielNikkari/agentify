@@ -109,7 +109,7 @@ export default function Home() {
             >
               {showSidebar ? (
                 <svg
-                  className={`stroke-agentify-dark fill-agentify-dark`}
+                  className={`stroke-agentify-dark-gray fill-agentify-dark-gray`}
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 20 20"
                 >
@@ -117,7 +117,7 @@ export default function Home() {
                 </svg>
               ) : (
                 <svg
-                  className={`stroke-agentify-dark fill-agentify-dark`}
+                  className={`stroke-agentify-dark-gray fill-agentify-dark-gray`}
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 20 20"
                 >
@@ -262,7 +262,11 @@ export default function Home() {
       <main className="flex-1 overflow-y-auto">
         {agents.length === 0 ? (
           <div className="flex min-h-full flex-col items-center justify-center p-6 text-center">
-            <img src={emptyBox} alt="Empty box illustration" className="w-40 h-40 mb-6" />
+            <img
+              src={emptyBox}
+              alt="Empty box illustration"
+              className="w-40 h-40 mb-6 prevent-drag"
+            />
             <h2 className="text-2xl font-semibold text-agentify-dark mb-2">
               Oopsie... you have no agents,
             </h2>

@@ -10,11 +10,14 @@ def vertexai_model():
 
 
 @pytest.fixture(scope="session")
-def agent():
+def agent(request):
+    user_id = request.config.getoption("--user-id")
+    agent_id = request.config.getoption("--agent-id")
+
     return Agent(
-        id="test_id",
-        owner_id="test_owner_id",
-        name="Test Agent",
+        id=agent_id or "test_id",
+        owner_id=user_id or "test_owner_id",
+        name="Marry Poppins",
         model="gemini-2.5-flash",
         status="idle",
         role="test role",
@@ -24,3 +27,8 @@ def agent():
         knowledge_base=None,
         tools=None,
     )
+
+
+def pytest_addoption(parser):
+    parser.addoption("--user-id", action="store", default=None)
+    parser.addoption("--agent-id", action="store", default=None)

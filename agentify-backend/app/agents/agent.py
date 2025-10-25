@@ -6,6 +6,7 @@ import logging
 from dataclasses import field
 from typing import Any, Generator, TypedDict
 
+import google.cloud.firestore as fs
 from langchain.agents import create_agent
 from langchain.messages import AIMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
@@ -15,6 +16,7 @@ from pydantic.dataclasses import dataclass
 from app.agents.base import Agentify
 from app.agents.exceptions import AgentInvokationError, HistoryFetchingError
 from app.agents.model_factory import get_model
+from app.core.firestore import init_firestore_sync
 
 logger = logging.getLogger(__name__)
 
@@ -147,18 +149,33 @@ class Agent(Agentify):
     def _update_history(self, message: HumanMessage | AIMessage) -> None:
         """Update conversation history."""
         self._conversation_history = self._conversation_history + [message]
-        # TODO: Implement Firestore integration to store the conversation on Firestore (run storing async on background)
+        try:
+            self._update_firestore_agent_history(message)
+        except Exception:
+            logger.error(
+                f"Failed to update agent's conversation history on Firestore (agent_id={self._id})",
+                exc_info=True,
+            )
 
-    def run(self, input: str, conversation_id: str) -> list[HumanMessage | AIMessage]:
-        """Invoke agent synchronously."""
+    def run(self, input: str, conversation_id: str) -> AIMessage:
+        """
+        Invoke agent synchronously.
+        Args:
+            input (str): Input to be sent to the agent.
+            conversation_id (str): Conversation ID.
+        Returns:
+            AIMessage: Response from the agent.
+        """
         try:
             config: RunnableConfig = {"configurable": {"thread_id": conversation_id}}
             self._update_history(HumanMessage(input))
             messages = {"messages": self._conversation_history}
-            response = self._graph.invoke(messages, config=config)
-            # TODO: request and token tracking
-            self._update_history(response.get("messages")[-1])
-            return response.get("messages")[-1]
+            response = self._graph.invoke(messages, config=config).get("messages")[-1]
+            self._update_history(response)
+            logger.info(
+                f"input_tokens={response.usage_metadata["input_tokens"]}, output_tokens={response.usage_metadata["output_tokens"]}, total_tokens={response.usage_metadata["total_tokens"]}"
+            )
+            return response
         except Exception:
             logger.error(
                 f"Error invoking the agent {self._name} (agent_id={self._id})",
@@ -169,17 +186,27 @@ class Agent(Agentify):
             ) from None
 
     def arun(self, input: str, conversation_id: str) -> Generator:
-        """Invoke agent asynchronously."""
+        """
+        Invoke agent asynchronously. Streams updates.
+        Args:
+            input (str): Input to be sent to the agent.
+            conversation_id (str): Conversation ID.
+        Returns:
+            AIMessage: Response from the agent.
+        """
         try:
             config: RunnableConfig = {"configurable": {"thread_id": conversation_id}}
             self._update_history(HumanMessage(input))
             messages = {"messages": self._conversation_history}
-            # TODO: request and token tracking
             for chunk in self._graph.stream(
                 messages, stream_mode="updates", config=config
             ):
-                self._update_history([chunk.get("model").get("messages")[-1]])
-                yield (chunk.get("model").get("messages")[-1])
+                response = chunk.get("model").get("messages")[-1]
+                self._update_history(response)
+                yield response
+            logger.info(
+                f"input_tokens={response.usage_metadata["input_tokens"]}, output_tokens={response.usage_metadata["output_tokens"]}, total_tokens={response.usage_metadata["total_tokens"]}"
+            )
         except Exception:
             logger.error(
                 f"Error invoking the agent {self._name} ({self._id})", exc_info=True
@@ -187,3 +214,44 @@ class Agent(Agentify):
             raise AgentInvokationError(
                 f"Error invoking agent {self._name} (agent_id={self._id})"
             ) from None
+
+    def _get_conversation_history(self) -> list[HumanMessage | AIMessage]:
+        """Get agent conversation history from Firestore."""
+        db = init_firestore_sync()
+        history_ref = (
+            db.collection("users")
+            .document(self.owner_id)
+            .collection("agents")
+            .document(self.id)
+            .collection("history")
+            .order_by("timestamp", direction="ASCENDING")
+        )
+        history: list[HumanMessage | AIMessage] = []
+        for doc in history_ref.stream():
+            data = doc.to_dict()
+            if data["role"] == "user":
+                history.append(HumanMessage(content=data["content"]))
+            else:
+                history.append(AIMessage(content=data["content"]))
+        return history
+
+    def _update_firestore_agent_history(
+        self, message: HumanMessage | AIMessage
+    ) -> None:
+        """Update agent history to the Firestore."""
+        db = init_firestore_sync()
+        history_ref = (
+            db.collection("users")
+            .document(self.owner_id)
+            .collection("agents")
+            .document(self.id)
+            .collection("history")
+        )
+        role = "user" if isinstance(message, HumanMessage) else "agent"
+        history_ref.add(
+            {
+                "role": role,
+                "content": message.content,
+                "timestamp": fs.SERVER_TIMESTAMP,
+            }
+        )

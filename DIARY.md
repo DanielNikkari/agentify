@@ -36,4 +36,4 @@
 
 `23.10.2025`: Swapped Agno for LangChain, implemented base for working on Agent classes and improved unittesting.
 
-`25.10.2025`: Continued developing base for Agent classes and added short-term memory (conversation history).
+`25.10.2025`: Continued developing base for Agent classes and added short-term conversation history (Agent state) and long-term conversation history (Firestore History collection).

@@ -7,8 +7,6 @@ from typing import Generator
 
 from langchain.messages import AIMessage, HumanMessage
 
-from app.core.firestore import init_firestore_sync
-
 
 class Agentify(ABC):
     """Interface for all LLM agents."""
@@ -60,29 +58,23 @@ class Agentify(ABC):
 
     @abstractmethod
     def _get_conversation_history(self) -> list[HumanMessage | AIMessage]:
-        """Get agent conversation history from Firestore."""
-        db = init_firestore_sync()
-        history_ref = (
-            db.collection("users")
-            .document(self.owner_id)
-            .collection("agents")
-            .document(self.id)
-            .collection("history")
-            .order_by("timestamp", direction="ASCENDING")
-        )
-        history: list[HumanMessage | AIMessage] = []
-        for doc in history_ref.stream():
-            data = doc.to_dict()
-            if data["role"] == "user":
-                history.append(HumanMessage(content=data["content"]))
-            else:
-                history.append(AIMessage(content=data["content"]))
-        return history
+        raise NotImplementedError
+
+    @abstractmethod
+    def _update_firestore_agent_history(
+        self, message: HumanMessage | AIMessage
+    ) -> None:
+        """Update agent history to the Firestore."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def _update_history(self, message: HumanMessage | AIMessage) -> None:
+        raise NotImplementedError
 
     @abstractmethod
     def run(self, inputs: list[HumanMessage | AIMessage]) -> str:
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def arun(self, inputs: list[HumanMessage | AIMessage]) -> Generator:
-        pass
+        raise NotImplementedError

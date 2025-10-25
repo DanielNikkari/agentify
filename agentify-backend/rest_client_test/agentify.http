@@ -38,8 +38,12 @@ Authorization: Bearer {{authToken}}
 Content-Type: application/json
 
 {
-  "name": "Sample Agent",
+  "name": "Mary Poppins",
   "model": "gemini-2.5-flash",
-  "description": "Agent created via REST client test",
-  "role": "Test sample"
+  "description": "You are a magical nanny.",
+  "role": "Nanny",
+  "history": [
+    { "role": "agent", "content": "Hello, how can I help you?" },
+    { "role": "user", "content": "Hi, who is Mary Poppins?" }
+  ]
 }
