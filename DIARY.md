@@ -25,3 +25,15 @@
 `9.10.2025`: Added API contracts and System Architecture documentations. Started the process of setting up the CI-pipelines for both frontend and backend. Created Firebase/GCP project, enabled Firebase Email, Google, and Github authentications. Created Docker compose file for easier containerization and added basic Firebase token validation flow to the backend.
 
 `10.10.2025`: Recreated the logo for agentify to better align with the brand. Setting up Tailwind for the frontend.
+
+`11.10.2025`: Improvements for the login page and added terms & conditions for agentify that every user has to agree with. I added components for auth buttons, close button, sliding alert messages, and terms & conditions modal. Moreover, I added registration page for the users that want to sign up using their email.
+
+`18.10.2025`: Added Agent Cards for reprsenting each Agent that the user has created.
+
+`19.10.2025`: Added endpoints for creating an agent, getting an agent, and getting all agents for the authenticated user. Added frontend API services to handle agents operations.
+
+`20.10.2025`: Implemented Agent model factory.
+
+`23.10.2025`: Swapped Agno for LangChain, implemented base for working on Agent classes and improved unittesting.
+
+`25.10.2025`: Continued developing base for Agent classes and added short-term conversation history (Agent state) and long-term conversation history (Firestore History collection).

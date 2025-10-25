@@ -1,0 +1,74 @@
+/* agentify loading bar loader */
+.loader {
+  border-radius: 20px;
+  color: var(--color-agentify-accent-coral);
+  border: 2px solid;
+  position: relative;
+}
+.loader::before {
+  content: '';
+  position: absolute;
+  margin: 2px;
+  inset: 0 100% 0 0;
+  border-radius: inherit;
+  background: currentColor;
+  animation: l6 2s infinite;
+}
+@keyframes l6 {
+  100% {
+    inset: 0;
+  }
+}
+
+/* agentify spinner */
+.spinner {
+  border-radius: 50%;
+  display: block;
+  margin: 15px;
+  position: relative;
+  box-sizing: border-box;
+  animation: rotation 1s linear infinite;
+}
+.spinner::after,
+.spinner::before {
+  content: '';
+  box-sizing: border-box;
+  position: absolute;
+  left: 0;
+  top: 0;
+  background: var(--color-agentify-accent-coral);
+  width: 20px;
+  height: 20px;
+  transform: translate(-50%, 50%);
+  border-radius: 50%;
+}
+.spinner::before {
+  left: auto;
+  right: 0;
+  background: var(--color-agentify-accent-blue);
+  transform: translate(50%, 100%);
+}
+
+@keyframes rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* three dots loader */
+.dots-loader {
+  font-weight: bold;
+  display: inline-block;
+  font-size: 20px;
+  clip-path: inset(0 1.3ch 0 0);
+  animation: l 1s steps(4, jump-none) infinite;
+}
+
+@keyframes l {
+  to {
+    clip-path: inset(0);
+  }
+}

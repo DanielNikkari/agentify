@@ -1,0 +1,49 @@
+@baseUrl = http://localhost:8080
+@authToken = <token>
+@agentId = <agent-id>
+
+###
+# Root health check
+GET {{baseUrl}}/
+
+###
+# Protected hello endpoint (requires Firebase token)
+GET {{baseUrl}}/protected
+Authorization: Bearer {{authToken}}
+
+###
+# Validate Firebase token
+POST {{baseUrl}}/auth/validate
+Authorization: Bearer {{authToken}}
+
+###
+# Current authenticated user info
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{authToken}}
+
+###
+# Agents listing (requires Firebase token, if /agents is mounted)
+GET {{baseUrl}}/agents
+Authorization: Bearer {{authToken}}
+
+###
+# Get an Agent
+GET {{baseUrl}}/agents/{{agentId}}
+Authorization: Bearer {{authToken}}
+
+###
+# Create Agent
+POST {{baseUrl}}/agents
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "name": "Mary Poppins",
+  "model": "gemini-2.5-flash",
+  "description": "You are a magical nanny.",
+  "role": "Nanny",
+  "history": [
+    { "role": "agent", "content": "Hello, how can I help you?" },
+    { "role": "user", "content": "Hi, who is Mary Poppins?" }
+  ]
+}
