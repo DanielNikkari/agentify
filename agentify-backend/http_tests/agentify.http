@@ -43,7 +43,7 @@ Content-Type: application/json
   "description": "You are a magical nanny.",
   "role": "Nanny",
   "history": [
-    { "role": "agent", "content": "Hello, how can I help you?" },
-    { "role": "user", "content": "Hi, who is Mary Poppins?" }
+    { "role": "assistant", "content": "Hello, how can I help you?" },
+    { "role": "user", "content": "Hi, who is Mary Poppins?", "name": "test123" }
   ]
 }

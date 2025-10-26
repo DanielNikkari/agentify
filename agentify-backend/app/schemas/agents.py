@@ -3,9 +3,17 @@ Schemas for Agents.
 """
 
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
+
+
+class AgentMessage(BaseModel):
+    role: Literal["system", "user", "assistant", "tool"]
+    content: str
+    name: str | None = None
+    tool_calls: list[dict[str, Any]] | None = None
+    # TODO: Add image support later
 
 
 class AgentCreate(BaseModel):
@@ -15,7 +23,7 @@ class AgentCreate(BaseModel):
     avatar: str | None = None
     description: str | None = None
     system_message: str | None = None
-    history: list = Field(default_factory=list)
+    history: list[AgentMessage] = Field(default_factory=list)
     # TODO: knowledge_base: add setting knowledge base(s)
     knowledge_base: None = None
     # TODO: tools: add setting tool(s)

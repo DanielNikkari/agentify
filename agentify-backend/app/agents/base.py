@@ -5,7 +5,8 @@ Base class for LLM Agents.
 from abc import ABC, abstractmethod
 from typing import Generator
 
-from langchain.messages import AIMessage, HumanMessage
+from agno.agent.agent import Agent as AgnoAgent
+from agno.models.message import Message
 
 
 class Agentify(ABC):
@@ -19,6 +20,16 @@ class Agentify(ABC):
     @property
     @abstractmethod
     def owner_id(self):
+        pass
+
+    @property
+    @abstractmethod
+    def user_id(self):
+        pass
+
+    @property
+    @abstractmethod
+    def session_id(self):
         pass
 
     @property
@@ -53,28 +64,25 @@ class Agentify(ABC):
 
     @property
     @abstractmethod
-    def graph(self):
+    def agent(self) -> AgnoAgent:
         pass
 
     @abstractmethod
-    def _get_conversation_history(self) -> list[HumanMessage | AIMessage]:
+    def _get_friestore_agent_conversation_history(self) -> list[Message]:
         raise NotImplementedError
 
     @abstractmethod
-    def _update_firestore_agent_history(
-        self, message: HumanMessage | AIMessage
-    ) -> None:
-        """Update agent history to the Firestore."""
+    def _update_firestore_agent_history(self, message: Message) -> None:
         raise NotImplementedError
 
     @abstractmethod
-    def _update_history(self, message: HumanMessage | AIMessage) -> None:
+    def _update_history(self, message: Message) -> None:
         raise NotImplementedError
 
     @abstractmethod
-    def run(self, inputs: list[HumanMessage | AIMessage]) -> str:
+    def run(self, inputs: list[Message]) -> str:
         raise NotImplementedError
 
     @abstractmethod
-    def arun(self, inputs: list[HumanMessage | AIMessage]) -> Generator:
+    def arun(self, inputs: list[Message]) -> Generator:
         raise NotImplementedError
