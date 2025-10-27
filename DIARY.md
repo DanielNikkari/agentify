@@ -39,3 +39,5 @@
 `25.10.2025`: Continued developing base for Agent classes and added short-term conversation history (Agent state) and long-term conversation history (Firestore History collection).
 
 `26.10.2025`: Migrating back to Agno as LangChain posed too many hard to handle issues when building agents.
+
+`27.10.2025`: Defaulted to use Agno FirebaseDb integration instead of building my own Firebase integration for Agno agents.

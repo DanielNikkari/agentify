@@ -59,25 +59,8 @@ class Agentify(ABC):
 
     @property
     @abstractmethod
-    def history(self):
-        pass
-
-    @property
-    @abstractmethod
     def agent(self) -> AgnoAgent:
         pass
-
-    @abstractmethod
-    def _get_friestore_agent_conversation_history(self) -> list[Message]:
-        raise NotImplementedError
-
-    @abstractmethod
-    def _update_firestore_agent_history(self, message: Message) -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def _update_history(self, message: Message) -> None:
-        raise NotImplementedError
 
     @abstractmethod
     def run(self, inputs: list[Message]) -> str:
