@@ -1,8 +1,10 @@
 // src/pages/Chat.tsx
 import React, { useState } from 'react';
+import ChatTextarea from '../components/ChatTextarea';
 import { useNavigate, useParams } from 'react-router-dom';
 import agentifyLogoWithName from '../assets/agentify-logo-with-name.svg';
 import agentifyLogo from '../assets/agentify-logo.svg';
+import TermsAndConditions from '../components/TermsAndConditions';
 
 type Message = {
   id: string;
@@ -17,6 +19,9 @@ export default function Chat() {
   const [showSidebar, setShowSidebar] = useState(true);
   const isCollapsed = !showSidebar;
   const [messageInput, setMessageInput] = useState('');
+
+  // terms and conditions state
+  const [showTerms, setShowTerms] = useState(false);
 
   // Mock messages for now
   const [messages] = useState<Message[]>([
@@ -233,18 +238,64 @@ export default function Chat() {
           )}
         </div>
 
-        {/* Footer */}
+        {/* Footer (hidden when collapsed) */}
         {showSidebar && (
           <div className="px-6 py-4 text-xs text-agentify-dark-gray flex transition-opacity duration-200">
-            <button className="hover:underline hover:cursor-pointer">Terms of service</button>
-            <span className="mx-2">•</span>
-            <button className="hover:underline hover:cursor-pointer">Contact</button>
+            <button
+              className="hover:underline hover:cursor-pointer m-auto"
+              onClick={() => setShowTerms(true)}
+            >
+              Terms of service
+            </button>
           </div>
         )}
       </aside>
 
       {/* Main chat area */}
-      <main className="flex-1 flex flex-col overflow-hidden">{/* Chat rendering here */}</main>
+      <main className="flex-1 flex flex-col overflow-hidden h-full">
+        {/* Chat info - fixed height at top */}
+        <section id="chat-info" className="flex-shrink-0 h-16 px-6 flex items-center">
+          {/* Chat info */}
+          <h1>Test Chat Name</h1>
+        </section>
+
+        {/* Message area - takes remaining space and scrolls */}
+        <section id="message-area" className="flex-1 overflow-y-auto px-6 py-6">
+          {/* Messages */}
+          <div className="max-w-4xl mx-auto space-y-4">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`max-w-[70%] rounded-2xl px-4 py-3 ${
+                    message.sender === 'user'
+                      ? 'bg-agentify-accent-coral text-white'
+                      : 'bg-white border border-gray-200'
+                  }`}
+                >
+                  <p className="text-base">{message.content}</p>
+                  <span className="text-xs opacity-70 mt-1 block">{message.timestamp}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Chat box - fixed at bottom */}
+        <section id="chat-box-area" className="flex-shrink-0 p-6">
+          <div className="max-w-4xl mx-auto">
+            <ChatTextarea
+              value={messageInput}
+              onChange={setMessageInput}
+              onSend={handleSendMessage}
+            />
+          </div>
+        </section>
+      </main>
+      {/* Modal */}
+      <TermsAndConditions isOpen={showTerms} onClose={() => setShowTerms(false)} />
     </div>
   );
 }
