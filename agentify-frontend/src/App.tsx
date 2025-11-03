@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
+import Chat from './pages/Chat';
 import ProtectedRoute from './routes/ProtectedRoute';
 import './App.css';
 
@@ -17,6 +18,7 @@ export default function App() {
         {/* Protected routes */}
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<Home />} />
+          <Route path="/chat/:agentId?" element={<Chat />} />
         </Route>
       </Routes>
     </BrowserRouter>
