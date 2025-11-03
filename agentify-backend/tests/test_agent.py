@@ -1,11 +1,12 @@
 import pytest
-from langchain.messages import AIMessage, HumanMessage
+from agno.agent import RunContentEvent
+from agno.models.message import Message
 
 from app.agents.agent import Agent
 
 
 @pytest.mark.parametrize(
-    "id, owner_id, name, model, status, role, description, system_message, temperature, knowledge_base, tools",
+    "id, owner_id, name, model, status, user_id, role, description, system_message, temperature, knowledge_base, tools",
     [
         (
             "test_id",
@@ -13,6 +14,7 @@ from app.agents.agent import Agent
             "Test Agent",
             "gemini-2.5-flash",
             "idle",
+            "user123",
             "Test role",
             "Agent for unittesting.",
             "You are a test agent",
@@ -28,6 +30,7 @@ def test_agent(
     name,
     model,
     status,
+    user_id,
     role,
     description,
     system_message,
@@ -41,6 +44,7 @@ def test_agent(
         name=name,
         model=model,
         status=status,
+        user_id=user_id,
         role=role,
         description=description,
         system_message=system_message,
@@ -53,11 +57,19 @@ def test_agent(
 
 def test_run(agent):
     """
-    >>> uv run pytest tests/test_agent.py::test_sync_conversation -s --user-id <user-id> --agent-id <agent-id>
+    >>> uv run pytest tests/test_agent.py::test_run -s --user-id <user-id> --agent-id <agent-id>
     """
-    response = agent.run([HumanMessage("Write me a haiku about spring.")])
+    response = agent.run("Write me a haiku about spring.", user_name="Test User")
     isinstance(response, list)
-    isinstance(all(response), HumanMessage | AIMessage)
+    isinstance(all(response), Message)
+
+
+def test_stream(agent):
+    """
+    >>> uv run pytest tests/test_agent.py::test_stream -s --user-id <user-id> --agent-id <agent-id>
+    """
+    for chunk in agent.stream("Write me a haiku about spring.", user_name="Test User"):
+        isinstance(chunk, RunContentEvent)
 
 
 def test_sync_conversation(agent):
@@ -68,7 +80,7 @@ def test_sync_conversation(agent):
         user_input = input("Your message:")
         if user_input == "exit":
             break
-        response = agent.run(user_input, "testConvId")
+        response = agent.run(user_input, user_name="Test User")
         print(f"Agent response:\n{response}")
 
 
@@ -76,9 +88,9 @@ def test_arun(agent):
     """
     >>> uv run pytest tests/test_agent.py::test_sync_conversation -s --user-id <user-id> --agent-id <agent-id>
     """
-    for event in agent.arun([HumanMessage("Tell me a fun fact fom history.")]):
+    for event in agent.arun("Tell me a fun fact fom history."):
         pass
-    isinstance(event[0], AIMessage)
+    isinstance(event[0], Message)
 
 
 def test_async_conversation(agent):

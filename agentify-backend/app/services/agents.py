@@ -89,6 +89,8 @@ async def create_agent(user_id: str, data: AgentCreate) -> Agent:
             {
                 "role": item["role"],
                 "content": item["content"],
+                "name": item.get("name", None),
+                "tool_calls": item.get("tool_calls", None),
                 "timestamp": fs.SERVER_TIMESTAMP,
             }
         )

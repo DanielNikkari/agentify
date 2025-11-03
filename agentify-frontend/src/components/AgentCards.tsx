@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import CardBrainIcon from '../assets/icons/card-brain-icon.svg';
 import CardIDCardIcon from '../assets/icons/card-id-card-icon.svg';
@@ -12,7 +13,8 @@ export type Agent = {
   uuid: string;
   name: string;
   model: string; // e.g. "GPT 5", "Gemini 2.5 Flash", "Sonnet 4.5"
-  avatar: string;
+  avatar?: string;
+  icon?: string; // Alternative to avatar for backwards compatibility
   role?: string;
   status?: AgentStatus;
   accent?: AgentAccent; // avatar halo color
@@ -48,26 +50,48 @@ function DetailRow({ icon, label }: { icon: React.ReactNode; label: string }) {
 }
 
 export function AgentCard({ agent }: { agent: Agent }) {
-  const { uuid, name, role, model, status, accent = 'blue', avatar, knowledge_base, tools } = agent;
+  const navigate = useNavigate();
+  const {
+    uuid,
+    name,
+    role,
+    model,
+    status,
+    accent = 'blue',
+    avatar,
+    icon,
+    knowledge_base,
+    tools,
+  } = agent;
   const resolvedStatus = (status || 'idle') as AgentStatus;
   const statusLabel = `${resolvedStatus.charAt(0).toUpperCase()}${resolvedStatus.slice(1)}`;
 
-  const getAvatarUrl = (avatar: string | number) => {
-    // Case 1: avatar is a number → load from local default icons
-    if (!isNaN(Number(avatar))) {
-      const index = Number(avatar);
-      return `/public/agent-icons/agent-icon-${index}.svg`; // OR your own array/map instead
+  const getAvatarUrl = (avatarOrIcon?: string | number): string => {
+    // If no avatar/icon provided, use a default
+    if (!avatarOrIcon) {
+      return `/public/agent-icons/agent-icon-1.svg`;
     }
 
-    // Case 2: avatar is a real URL (string that’s NOT a number)
-    return avatar;
+    // Case 1: avatar is a number → load from local default icons
+    if (!isNaN(Number(avatarOrIcon))) {
+      const index = Number(avatarOrIcon);
+      return `/public/agent-icons/agent-icon-${index}.svg`;
+    }
+
+    // Case 2: avatar is a real URL (string that's NOT a number)
+    return String(avatarOrIcon);
   };
 
-  const agentAvatar = getAvatarUrl(avatar);
+  const agentAvatar = getAvatarUrl(avatar || icon);
+
+  const handleClick = () => {
+    navigate(`/chat/${uuid}`);
+  };
 
   return (
     <div
-      className="relative w-[290px] rounded-2xl border border-black/5 bg-[var(--color-agentify-white)] p-6 shadow-md shadow-black/10 transition-shadow hover:shadow-lg hover:cursor-pointer overflow-hidden"
+      onClick={handleClick}
+      className="relative w-[290px] rounded-2xl border-2 border-black/5 bg-[var(--color-agentify-white)] p-6 hover:border-[var(--color-agentify-accent-coral)] hover:cursor-pointer overflow-hidden"
       role="group"
     >
       {/* status dot + tooltip */}

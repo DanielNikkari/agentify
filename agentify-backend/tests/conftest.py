@@ -20,6 +20,7 @@ def agent(request):
         name="Marry Poppins",
         model="gemini-2.5-flash",
         status="idle",
+        user_id="user123",
         role="test role",
         description="Agent for unittesting.",
         system_message="You are a test agent",
