@@ -18,7 +18,7 @@ export default function App() {
         {/* Protected routes */}
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<Home />} />
-          <Route path="/chat/:agentId?" element={<Chat />} />
+          <Route path="/chat/:agentId" element={<Chat />} />
         </Route>
       </Routes>
     </BrowserRouter>

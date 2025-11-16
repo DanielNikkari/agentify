@@ -2,6 +2,7 @@
 Handle agents service.
 """
 
+import asyncio
 import logging
 import random
 from datetime import datetime
@@ -10,8 +11,9 @@ from uuid import uuid4
 import google.cloud.firestore as fs
 from fastapi import HTTPException
 
+from app.agents.agent import Agent as AgentInstance
 from app.core.firestore import init_firestore
-from app.schemas.agents import Agent, AgentCreate
+from app.schemas.agents import Agent, AgentCreate, Message, MessageCreate
 
 logger = logging.getLogger(__name__)
 
@@ -98,3 +100,89 @@ async def create_agent(user_id: str, data: AgentCreate) -> Agent:
     agent_data.pop("created_at")
     agent_data["history"] = history
     return Agent(uuid=agent_id, created_at=datetime.utcnow(), **agent_data)
+
+
+async def get_messages(user_id: str, agent_id: str, session_id: str) -> list[Message]:
+    """Fetch all messages for a given session."""
+    try:
+        db = init_firestore()
+
+        # Query messages from Firestore using the Agno path structure
+        messages_ref = (
+            db.collection("users")
+            .document(user_id)
+            .collection("agents")
+            .document(agent_id)
+            .collection("sessions")
+            .document(session_id)
+            .collection("messages")
+        )
+
+        # Order by timestamp
+        docs = messages_ref.order_by("created_at").stream()
+
+        messages: list[Message] = []
+        async for doc in docs:
+            data = doc.to_dict()
+            message = Message(
+                id=doc.id,
+                content=data.get("content", ""),
+                sender="agent" if data.get("role") == "assistant" else "user",
+                role=data.get("role"),
+                timestamp=data.get("created_at", "").isoformat()
+                if data.get("created_at")
+                else "",
+            )
+            messages.append(message)
+
+        return messages
+    except Exception:
+        logger.exception(
+            f"Failed to get messages for agent {agent_id}, session {session_id}"
+        )
+        raise
+
+
+async def send_message(
+    user_id: str, agent_id: str, session_id: str, message_data: MessageCreate
+) -> Message:
+    """Send a message and get agent response."""
+    try:
+        # Get agent configuration
+        agent_config = await get_agent_by_id(user_id, agent_id)
+
+        # Create agent instance with session_id
+        agent_instance = AgentInstance(
+            id=agent_id,
+            owner_id=user_id,
+            user_id=user_id,
+            session_id=session_id,
+            name=agent_config.name,
+            model=agent_config.model,
+            status=agent_config.status,
+            role=agent_config.role,
+            description=agent_config.description,
+            system_message=agent_config.system_message,
+        )
+
+        # Run agent with user input (run in executor since it's synchronous)
+        loop = asyncio.get_event_loop()
+        response_message = await loop.run_in_executor(
+            None, agent_instance.run, message_data.content, "User"
+        )
+
+        # Convert Agno Message to our Message schema
+        message = Message(
+            id=response_message.id or str(uuid4()),
+            content=response_message.content,
+            sender="agent",
+            role=response_message.role,
+            timestamp=datetime.utcnow().isoformat(),
+        )
+
+        return message
+    except Exception:
+        logger.exception(
+            f"Failed to send message for agent {agent_id}, session {session_id}"
+        )
+        raise

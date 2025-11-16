@@ -85,6 +85,7 @@ export function AgentCard({ agent }: { agent: Agent }) {
   const agentAvatar = getAvatarUrl(avatar || icon);
 
   const handleClick = () => {
+    console.log(`Navigating to chat with agent ${uuid}`);
     navigate(`/chat/${uuid}`);
   };
 

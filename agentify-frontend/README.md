@@ -29,3 +29,9 @@ VITE_APP_ID=<app-id>
 VITE_MEASUREMENT_ID=<measurement-id>
 VITE_API_URL=http://localhost:8080
 ```
+
+# Run dev environment
+
+```bash
+npm run dev
+```

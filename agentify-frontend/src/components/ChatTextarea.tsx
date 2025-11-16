@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { Tiktoken, encodingForModel } from 'js-tiktoken';
 import { SendIcon, ToolsIcon, AddIcon } from './icons/icons';
 
 interface ChatTextareaProps {
@@ -23,10 +24,35 @@ const ChatTextarea: React.FC<ChatTextareaProps> = ({
   width = 'w-full',
 }) => {
   const [inputValue, setInputValue] = useState(value);
-  const [tokenCount] = useState(0);
   const [filesCount] = useState(0);
   const [showPlaceholder, setShowPlaceholder] = useState(true);
+  const [isDragging, setIsDragging] = useState(false);
   const contentEditableRef = useRef<HTMLDivElement>(null);
+  const dragCounterRef = useRef(0);
+
+  // Initialize tokenizer (use cl100k_base encoding for GPT-4 and modern models)
+  const tokenizer = useMemo(() => {
+    try {
+      return encodingForModel('gpt-4');
+    } catch (error) {
+      console.error('Failed to initialize tokenizer:', error);
+      return null;
+    }
+  }, []);
+
+  // Calculate token count
+  const tokenCount = useMemo(() => {
+    if (!tokenizer || !inputValue.trim()) {
+      return 0;
+    }
+    try {
+      const tokens = tokenizer.encode(inputValue);
+      return tokens.length;
+    } catch (error) {
+      console.error('Failed to count tokens:', error);
+      return 0;
+    }
+  }, [inputValue, tokenizer]);
 
   useEffect(() => {
     if (contentEditableRef.current && value !== inputValue) {
@@ -34,7 +60,7 @@ const ChatTextarea: React.FC<ChatTextareaProps> = ({
       setInputValue(value);
       setShowPlaceholder(value.length === 0);
     }
-  }, [value]);
+  }, [value, inputValue]);
 
   const handleInput = () => {
     const newValue = contentEditableRef.current?.textContent || '';
@@ -61,9 +87,76 @@ const ChatTextarea: React.FC<ChatTextareaProps> = ({
     }
   };
 
+  // Drag and drop handlers
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current++;
+    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current--;
+    if (dragCounterRef.current === 0) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    dragCounterRef.current = 0;
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      // TODO: Handle file upload
+      console.log('Files dropped:', files);
+      // You can add file processing logic here
+    }
+  };
+
   return (
-    <div className={width}>
+    <div
+      className={width}
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       <div className="relative w-full bg-white border-2 border-gray-200 rounded-[32px] px-6 py-4 flex flex-col gap-3 focus-within:border-agentify-dark transition-colors">
+        {/* Drag and Drop Overlay */}
+        {isDragging && (
+          <div className="absolute inset-0 z-50 rounded-[32px] border-4 border-dashed border-agentify-accent-coral flex items-center justify-center pointer-events-none bg-white/70">
+            <div className="flex flex-col items-center gap-3">
+              {/* Upload Icon */}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-12 w-12 text-agentify-accent-coral"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                />
+              </svg>
+            </div>
+          </div>
+        )}
+
         {/* Top Row: Textarea and Send Icon */}
         <div className="flex items-start gap-3">
           {/* Content Editable Div */}
@@ -129,9 +222,9 @@ const ChatTextarea: React.FC<ChatTextareaProps> = ({
 
           {/* Token and File Count */}
           <div className="text-xs text-agentify-dark-gray flex gap-2">
-            <span>token count {tokenCount.toString().padStart(3, '0')}</span>
+            <span>token count {tokenCount}</span>
             <span>•</span>
-            <span>files {filesCount.toString().padStart(3, '0')}</span>
+            <span>files {filesCount}</span>
           </div>
         </div>
       </div>

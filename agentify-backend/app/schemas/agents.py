@@ -35,3 +35,15 @@ class AgentCreate(BaseModel):
 class Agent(AgentCreate):
     uuid: str  # returned to client — server assigned
     status: Literal["active", "idle", "error"] = "idle"  # initial state is idle
+
+
+class MessageCreate(BaseModel):
+    content: str
+
+
+class Message(BaseModel):
+    id: str
+    content: str
+    sender: Literal["user", "agent"]
+    role: str | None = None
+    timestamp: str

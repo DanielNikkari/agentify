@@ -72,3 +72,120 @@
     clip-path: inset(0);
   }
 }
+
+/* pencil loader */
+.pencil-loader-container {
+  position: relative;
+  width: 120px;
+  height: 60px;
+}
+
+@keyframes pencil-animation {
+  0% {
+    transform: rotate(135deg);
+  }
+  20% {
+    transform: rotate(315deg);
+  }
+  45% {
+    transform: translateX(100px) rotate(315deg);
+  }
+  55% {
+    transform: translateX(100px) rotate(495deg);
+  }
+  100% {
+    transform: rotate(495deg);
+  }
+}
+
+.pencil {
+  position: relative;
+  width: 40px;
+  height: 8px;
+  transform-origin: center;
+  transform: rotate(135deg);
+  animation: pencil-animation 3s infinite;
+  z-index: 1000;
+}
+
+.pencil__ball-point {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--pencil-color);
+  height: 4px;
+  width: 4px;
+  border-radius: 50px;
+}
+
+.pencil__cap {
+  position: absolute;
+  left: 0px;
+  top: 50%;
+  transform: translateY(-50%);
+  clip-path: polygon(20% 40%, 100% 0%, 100% 100%, 20% 60%);
+  background: var(--color-agentify-dark);
+  width: 12%;
+  height: 100%;
+}
+
+.pencil__cap-base {
+  position: absolute;
+  left: 12%;
+  top: 0;
+  height: 100%;
+  width: 8px;
+  background: var(--color-agentify-dark);
+}
+
+.pencil__middle {
+  position: absolute;
+  left: calc(12% + 8px);
+  top: 0;
+  height: 100%;
+  width: 70%;
+  background: var(--pencil-color);
+}
+
+.pencil__eraser {
+  position: absolute;
+  left: calc(12% + 70% + 8px);
+  top: 0;
+  height: 100%;
+  width: 11%;
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
+  background: var(--color-agentify-dark);
+}
+
+.pencil-line {
+  position: absolute;
+  top: 32%;
+  left: 2px;
+  height: 3px;
+  width: 100px;
+  border-radius: 50px;
+  background: var(--pencil-color);
+  transform: translateY(-50%) scaleX(0);
+  transform-origin: left center;
+  animation: line-animation 3s infinite;
+}
+
+@keyframes line-animation {
+  0% {
+    transform: translateY(-50%) scaleX(0);
+  }
+  20% {
+    transform: translateY(-50%) scaleX(0);
+  }
+  45% {
+    transform: translateY(-50%) scaleX(1);
+  }
+  55% {
+    transform: translateY(-50%) scaleX(1);
+  }
+  100% {
+    transform: translateY(-50%) scaleX(0);
+  }
+}
