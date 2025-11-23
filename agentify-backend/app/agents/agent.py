@@ -100,10 +100,6 @@ class Agent(Agentify):
                 db_client=self._firestore_client,
                 project_id=os.getenv("GOOGLE_CLOUD_PROJECT"),
                 session_collection=f"users/{self._owner_id}/agents/{self._id}/sessions",
-                memory_collection=f"users/{self._owner_id}/agents/{self._id}/memory",
-                metrics_collection=f"users/{self._owner_id}/agents/{self._id}/metrics",
-                eval_collection=f"users/{self._owner_id}/agents/{self._id}/eval",
-                knowledge_collection=f"users/{self._owner_id}/agents/{self._id}/knowledge",
             ),
             add_history_to_context=True,
         )
@@ -170,7 +166,6 @@ class Agent(Agentify):
             logger.debug(pprint_run_response(response, markdown=True))
             if response.is_paused:
                 response = self._handle_tool_confirmation(response=response)
-                breakpoint()
             response_message = response.messages[-1]
             logger.info(
                 f"input_tokens={response_message.metrics.input_tokens}, output_tokens={response_message.metrics.output_tokens}, total_tokens={response_message.metrics.total_tokens}"
@@ -201,8 +196,20 @@ class Agent(Agentify):
                 user_id=self._user_id,
                 session_id=self._session_id,
                 stream=True,
+                stream_intermediate_steps=True,
             )
             for chunk in response:
+                if chunk.is_paused:
+                    # Handle tool confirmation inline for streaming mode
+                    for tool in chunk.tools_requiring_confirmation:
+                        logger.info(
+                            f"Tool {tool.tool_name}({tool.tool_args}) requires confirmation"
+                        )
+                        confirmed = input("Confirm? (y/n): ").lower() == "y"
+                        tool.confirmed = confirmed
+                    # Don't yield the paused chunk; continue iterating
+                    # The stream will automatically continue after confirmation
+                    continue
                 yield chunk
         except Exception:
             logger.error(

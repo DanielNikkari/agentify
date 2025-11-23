@@ -44,6 +44,12 @@ class MessageCreate(BaseModel):
 class Message(BaseModel):
     id: str
     content: str
-    sender: Literal["user", "agent"]
+    sender: Literal["user", "agent", "system"]
     role: str | None = None
     timestamp: str
+    tokens: int | None = None
+
+
+class Session(BaseModel):
+    session_id: str
+    messages: list[Message] = Field(default_factory=list)

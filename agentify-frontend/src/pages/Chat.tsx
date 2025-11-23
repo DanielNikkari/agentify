@@ -1,5 +1,5 @@
 // src/pages/Chat.tsx
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ChatTextarea from '../components/ChatTextarea';
 import AgentifyLoader from '../components/AgentifyLoader';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -7,26 +7,22 @@ import agentifyLogoWithName from '../assets/agentify-logo-with-name.svg';
 import agentifyLogo from '../assets/agentify-logo.svg';
 import TermsAndConditions from '../components/TermsAndConditions';
 import {
-  getMessages,
+  getOrCreateSession,
   createChatWebSocket,
   sendWebSocketMessage,
   getAgent,
   Message,
+  Session,
 } from '../api/agents';
 
 export default function Chat() {
   const navigate = useNavigate();
-  const { agentId } = useParams<{ agentId?: string }>();
+  const { agentId } = useParams<{ agentId: string }>();
   const [showSidebar, setShowSidebar] = useState(true);
   const isCollapsed = !showSidebar;
   const [messageInput, setMessageInput] = useState('');
 
-  // Generate a client-side session ID once when component mounts
-  const [sessionId] = useState(() => {
-    return crypto.randomUUID
-      ? crypto.randomUUID()
-      : `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
-  });
+  const [sessionId, setSessionId] = useState<string>('');
 
   // terms and conditions state
   const [showTerms, setShowTerms] = useState(false);
@@ -37,6 +33,9 @@ export default function Chat() {
   const [error, setError] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   let [isAgentTyping, setIsAgentTyping] = useState(false);
+
+  // Streaming message state - for displaying content as it arrives
+  const [streamingMessage, setStreamingMessage] = useState<string>('');
 
   // Agent info
   const [agentName, setAgentName] = useState<string>('Chat');
@@ -50,10 +49,10 @@ export default function Chat() {
   // Reference to scroll to bottom of messages
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  // Auto-scroll to bottom when messages change
+  // Auto-scroll to bottom when messages or streaming message changes
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, streamingMessage]);
 
   // Format timestamp to "HH:mm dd.MM.yyyy"
   const formatTimestamp = (timestamp: string): string => {
@@ -77,9 +76,9 @@ export default function Chat() {
     }
   };
 
-  // Fetch initial messages and establish WebSocket connection
+  // Fetch initial session and establish WebSocket connection
   useEffect(() => {
-    console.log('Chat mounted with agentId:', agentId, 'sessionId:', sessionId);
+    console.log('Chat mounted with agentId:', agentId);
 
     if (!agentId) {
       console.error('Missing required param - agentId:', agentId);
@@ -97,19 +96,29 @@ export default function Chat() {
         const agentInfo = await getAgent(agentId);
         setAgentName(agentInfo.name);
 
-        // Fetch initial messages
-        const initialMessages = await getMessages(agentId, sessionId);
-        setMessages(initialMessages);
+        // Fetch session from backend (gets or creates session with messages)
+        const session: Session = await getOrCreateSession(agentId);
+        console.log(
+          'Fetched session:',
+          session.session_id,
+          'with',
+          session.messages.length,
+          'messages'
+        );
+
+        // Set the session ID
+        setSessionId(session.session_id);
+
+        // Set messages from server
+        setMessages(session.messages);
 
         // Establish WebSocket connection
         const ws = createChatWebSocket(
           agentId,
-          sessionId,
+          session.session_id,
           (message: Message) => {
-            console.log('Received message from agent:', message);
-            // Agent has responded, stop typing indicator
-            setIsAgentTyping(false);
-            // Add new message to the list
+            console.log('Received complete message from agent:', message);
+            // Add final message to the list
             setMessages((prevMessages) => [...prevMessages, message]);
           },
           (error) => {
@@ -117,12 +126,31 @@ export default function Chat() {
             setError('Connection error occurred');
             setIsConnected(false);
             setIsAgentTyping(false);
+            setStreamingMessage('');
           },
           (event) => {
             console.log('WebSocket closed:', event);
             setIsConnected(false);
             setIsAgentTyping(false);
+            setStreamingMessage('');
             // Optionally implement reconnection logic here
+          },
+          // onStreamChunk - called for each content chunk
+          (chunk: string) => {
+            console.log('Received streaming chunk:', chunk);
+            setStreamingMessage((prev) => prev + chunk);
+          },
+          // onStreamStart - called when agent starts responding
+          () => {
+            console.log('Stream started');
+            setIsAgentTyping(true);
+            setStreamingMessage('');
+          },
+          // onStreamEnd - called when stream completes
+          () => {
+            console.log('Stream ended');
+            setIsAgentTyping(false);
+            setStreamingMessage('');
           }
         );
 
@@ -149,14 +177,11 @@ export default function Chat() {
         wsRef.current = null;
       }
     };
-  }, [agentId, sessionId]);
+  }, [agentId]);
 
   const handleSendMessage = () => {
     if (messageInput.trim() && wsRef.current) {
       console.log('Sending message:', messageInput);
-
-      // Send message through WebSocket
-      sendWebSocketMessage(wsRef.current, messageInput);
 
       // Optimistically add user message to UI
       const userMessage: Message = {
@@ -165,7 +190,12 @@ export default function Chat() {
         sender: 'user',
         timestamp: new Date().toISOString(),
       };
-      setMessages((prevMessages) => [...prevMessages, userMessage]);
+      const updatedMessages = [...messages, userMessage];
+      setMessages(updatedMessages);
+
+      // Send message through WebSocket
+      // Chat history is automatically handled by the backend via Firestore
+      sendWebSocketMessage(wsRef.current, messageInput);
 
       // Randomly select a color for the pencil
       const colors = [
@@ -386,7 +416,7 @@ export default function Chat() {
           id="chat-info"
           className="flex-shrink-0 h-16 px-6 flex items-center justify-between"
         >
-          <h1 className="text-agentify-dark-gray">{agentName} Chat</h1>
+          <h1 className="text-agentify-dark-gray">{agentName}</h1>
           {/* Connection status indicator */}
           <div className="flex items-center gap-2">
             <div
@@ -428,12 +458,24 @@ export default function Chat() {
                       <p className="text-base">{message.content}</p>
                       <span className="text-xs opacity-70 mt-1 block">
                         {formatTimestamp(message.timestamp)}
+                        {message.tokens && ` • ${message.tokens} tokens`}
                       </span>
                     </div>
                   </div>
                 ))}
-                {/* Agent typing indicator - Pencil loader */}
-                {isAgentTyping && (
+                {/* Streaming message - shows content as it arrives */}
+                {streamingMessage && (
+                  <div className="flex justify-start">
+                    <div className="max-w-[70%] rounded-2xl px-4 py-3 text-agentify-dark">
+                      <p className="text-base">{streamingMessage}</p>
+                      <span className="text-xs opacity-70 mt-1 block">
+                        {formatTimestamp(new Date().toISOString())}
+                      </span>
+                    </div>
+                  </div>
+                )}
+                {/* Agent typing indicator - Pencil loader (only show when no streaming content yet) */}
+                {isAgentTyping && !streamingMessage && (
                   <div className="flex justify-start">
                     <AgentifyLoader type="pencil" color={pencilColor} />
                   </div>

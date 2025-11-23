@@ -93,13 +93,13 @@ def test_arun(agent):
     isinstance(event[0], Message)
 
 
-def test_async_conversation(agent):
+def test_streaming_conversation(agent):
     """
-    >>> uv run pytest tests/test_agent.py::test_sync_conversation -s --user-id <user-id> --agent-id <agent-id>
+    >>> uv run pytest tests/test_agent.py::test_streaming_conversation -s --user-id <user-id> --agent-id <agent-id>
     """
     while True:
         user_input = input("Your message:")
         if user_input == "exit":
             break
-        for event in agent.arun(user_input, "testConvId"):
+        for event in agent.stream(user_input, "testConvId"):
             print(f"Agent response:\n{event}")

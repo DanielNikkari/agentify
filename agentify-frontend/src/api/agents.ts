@@ -5,6 +5,7 @@ export interface Agent {
   uuid: string;
   name: string;
   model: string;
+  sessions: Array<string>;
   description?: string;
   icon?: string;
   knowledge_base?: string;
@@ -17,6 +18,12 @@ export interface Message {
   sender: 'user' | 'agent';
   timestamp: string;
   role?: string;
+  tokens?: number;
+}
+
+export interface Session {
+  session_id: string;
+  messages: Message[];
 }
 
 export async function getAgents(): Promise<Array<Agent>> {
@@ -34,13 +41,8 @@ export async function getAgent(agentId: string): Promise<Agent> {
   return res.data;
 }
 
-export async function getOrCreateSession(agentId: string): Promise<string> {
-  const res = await api.get(`/agents/${agentId}/session`);
-  return res.data.session_id;
-}
-
-export async function getMessages(agentId: string, sessionId: string): Promise<Array<Message>> {
-  const res = await api.get(`/agents/${agentId}/sessions/${sessionId}/messages`);
+export async function getOrCreateSession(agentId: string): Promise<Session> {
+  const res = await api.get(`/agents/${agentId}/sessions/`);
   return res.data;
 }
 
@@ -56,18 +58,25 @@ export async function sendMessage(
 }
 
 /**
- * Create a WebSocket connection for real-time chat
+ * Create a WebSocket connection for real-time chat with streaming support
  */
 export function createChatWebSocket(
   agentId: string,
   sessionId: string,
   onMessage: (message: Message) => void,
   onError?: (error: Event) => void,
-  onClose?: (event: CloseEvent) => void
+  onClose?: (event: CloseEvent) => void,
+  onStreamChunk?: (chunk: string) => void,
+  onStreamStart?: () => void,
+  onStreamEnd?: () => void
 ): WebSocket {
   const wsUrl = import.meta.env.VITE_API_URL.replace('http', 'ws');
 
   const ws = new WebSocket(`${wsUrl}/agents/${agentId}/sessions/${sessionId}/ws`);
+
+  // Track streaming state
+  let currentStreamingMessage = '';
+  let currentRunId = '';
 
   ws.onopen = async () => {
     console.log('WebSocket connection established');
@@ -84,11 +93,41 @@ export function createChatWebSocket(
     try {
       const data = JSON.parse(event.data);
 
-      // Handle different message types
-      if (data.type === 'message') {
-        onMessage(data.message);
+      // Handle streaming events from the backend
+      if (data.type === 'started') {
+        console.log('Agent started responding');
+        currentStreamingMessage = '';
+        currentRunId = data.data.run_id;
+        if (onStreamStart) onStreamStart();
+      } else if (data.type === 'content') {
+        // Accumulate content chunks
+        const chunk = data.data;
+        currentStreamingMessage += chunk;
+        console.log('Received chunk:', chunk);
+        if (onStreamChunk) {
+          onStreamChunk(chunk);
+        }
+      } else if (data.type === 'content_completed') {
+        console.log('Content stream completed');
+      } else if (data.type === 'completed') {
+        // Final message with complete content
+        console.log('Run completed with full content:', data.data.content);
+        const message: Message = {
+          id: currentRunId || `msg-${Date.now()}`,
+          content: data.data.content,
+          sender: 'agent',
+          timestamp: new Date().toISOString(),
+          role: 'assistant',
+          tokens: data.data.metrics?.total_tokens,
+        };
+        onMessage(message);
+        if (onStreamEnd) onStreamEnd();
+        // Reset streaming state
+        currentStreamingMessage = '';
+        currentRunId = '';
       } else if (data.type === 'error') {
         console.error('WebSocket error:', data.error);
+        if (onStreamEnd) onStreamEnd();
       }
     } catch (error) {
       console.error('Failed to parse WebSocket message:', error);
@@ -114,6 +153,7 @@ export function createChatWebSocket(
 
 /**
  * Send a message through WebSocket
+ * Note: Chat history is automatically handled by the backend via Firestore
  */
 export function sendWebSocketMessage(ws: WebSocket, content: string): void {
   if (ws.readyState === WebSocket.OPEN) {

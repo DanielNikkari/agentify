@@ -6,15 +6,16 @@ import json
 import logging
 
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
+from fastapi.responses import StreamingResponse
 from firebase_admin import auth
 
 from app.core.security import verify_firebase_token
-from app.schemas.agents import Agent, AgentCreate, Message, MessageCreate
+from app.schemas.agents import Agent, AgentCreate, MessageCreate, Session
 from app.services.agents import (
     create_agent,
     get_agent_by_id,
     get_all_agents,
-    get_messages,
+    get_session,
     send_message,
 )
 
@@ -45,29 +46,42 @@ async def create_agent_route(
     return await create_agent(user["uid"], data)
 
 
-@router.get("/{agent_id}/sessions/{session_id}/messages", response_model=list[Message])
-async def get_messages_route(
-    agent_id: str, session_id: str, user: dict = Depends(verify_firebase_token)
-) -> list[Message]:
-    """Get all messages for a specific agent session."""
-    logger.info(
-        f"Getting messages for agent {agent_id}, session {session_id}, user {user['uid']}"
-    )
-    return await get_messages(user["uid"], agent_id, session_id)
+@router.get("/{agent_id}/sessions/")
+async def get_agent_session(
+    agent_id: str, user: dict = Depends(verify_firebase_token)
+) -> Session:
+    """Get agent session."""
+    logger.info(f"Getting session for agent {agent_id}, user {user['uid']}")
+    return await get_session(user_id=user["uid"], agent_id=agent_id)
 
 
-@router.post("/{agent_id}/sessions/{session_id}/messages", response_model=Message)
+@router.post("/{agent_id}/sessions/{session_id}/messages")
 async def send_message_route(
     agent_id: str,
     session_id: str,
     message: MessageCreate,
     user: dict = Depends(verify_firebase_token),
-) -> Message:
-    """Send a message to an agent and get response."""
+):
+    """Send a message to an agent and stream response using Server-Sent Events."""
     logger.info(
         f"Sending message to agent {agent_id}, session {session_id}, user {user['uid']}"
     )
-    return await send_message(user["uid"], agent_id, session_id, message)
+
+    async def event_generator():
+        """Generate Server-Sent Events for streaming."""
+        async for event in send_message(user["uid"], agent_id, session_id, message):
+            # Format as SSE: data: {json}\n\n
+            yield f"data: {json.dumps(event)}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",  # Disable buffering in nginx
+        },
+    )
 
 
 @router.websocket("/{agent_id}/sessions/{session_id}/ws")
@@ -109,26 +123,13 @@ async def websocket_endpoint(websocket: WebSocket, agent_id: str, session_id: st
                 content = message_data.get("content")
 
                 try:
-                    # Send message and get response from agent
-                    response_message = await send_message(
+                    # Stream message response from agent
+                    async for event in send_message(
                         user_id, agent_id, session_id, MessageCreate(content=content)
-                    )
+                    ):
+                        # Send each streaming event through WebSocket
+                        await websocket.send_text(json.dumps(event))
 
-                    # Send response back through WebSocket
-                    await websocket.send_text(
-                        json.dumps(
-                            {
-                                "type": "message",
-                                "message": {
-                                    "id": response_message.id,
-                                    "content": response_message.content,
-                                    "sender": response_message.sender,
-                                    "timestamp": response_message.timestamp,
-                                    "role": response_message.role,
-                                },
-                            }
-                        )
-                    )
                 except Exception as e:
                     logger.error(f"Error processing message: {e}", exc_info=True)
                     await websocket.send_text(
