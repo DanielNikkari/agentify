@@ -43,3 +43,5 @@
 `27.10.2025`: Defaulted to use Agno FirebaseDb integration instead of building my own Firebase integration for Agno agents.
 
 `3.11.2025`: Started development on chat view, added ChatTextarea component and Chat page.
+
+`23.11.2025`: Added agent Firestore session memory and message streaming over websocket.
